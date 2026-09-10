@@ -1,0 +1,354 @@
+/* ==========================================================================
+   A MEDIDA Confecciones - Estilos Principales
+   Emulación de Tarjeta Bordada Textil & Identidad de Marca
+   ========================================================================== */
+
+:root {
+    /* Paleta Oficial extraída del logo */
+    --color-navy: #1f2a44;
+    --color-navy-dark: #161e31;
+    --color-navy-light: #283757;
+    --color-hilo-crudo: #d8ceb4;
+    --color-hilo-hueso: #ebe5db;
+    --color-oro-sastre: #8b7442;
+    --color-oro-brillante: #a0854d;
+    --color-lino: #f5f1eb;
+    --color-lino-sombra: #e4ded4;
+
+    /* Fuentes Grotescas Oficiales */
+    --font-brand: 'Host Grotesk', 'Hanken Grotesk', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Transición suave para cambio de modo del dispositivo */
+    --theme-transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Reset básico */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* ==========================================================================
+   1. FONDO DE PÁGINA (MODO DÍA / LINO CRUDO POR DEFECTO)
+   ========================================================================== */
+body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    font-family: var(--font-brand);
+    overflow: hidden;
+    overscroll-behavior: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: var(--theme-transition);
+
+    /* Textura de Lino Crudo Artesanal limpia */
+    background-color: var(--color-lino);
+    background-image:
+        radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.6) 0%, rgba(216, 206, 180, 0.3) 100%),
+        repeating-linear-gradient(45deg, rgba(139, 116, 66, 0.04) 0px, rgba(139, 116, 66, 0.04) 1px, transparent 1px, transparent 4px),
+        repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.04) 0px, rgba(0, 0, 0, 0.04) 1px, transparent 1px, transparent 4px),
+        repeating-linear-gradient(0deg, rgba(139, 116, 66, 0.025) 0px, rgba(139, 116, 66, 0.025) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0px, rgba(255, 255, 255, 0.4) 1px, transparent 1px, transparent 3px);
+    color: var(--color-navy);
+}
+
+/* ==========================================================================
+   2. MARCO DE COSTURA: PESPUNTE PERIMETRAL LIMPIO Y NÍTIDO
+   ========================================================================== */
+.marco-costura {
+    position: fixed;
+    top: clamp(28px, 4vw, 48px);
+    left: clamp(28px, 4vw, 48px);
+    right: clamp(28px, 4vw, 48px);
+    bottom: clamp(28px, 4vw, 48px);
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Costura nítida sin sombras artificiales */
+.linea-pespunte {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    border: 4px dashed var(--color-oro-sastre);
+    opacity: 0.85;
+    transition: var(--theme-transition);
+}
+
+/* ==========================================================================
+   3. CONTENEDOR PRINCIPAL Y SECCIÓN HERO
+   ========================================================================== */
+.page-container {
+    width: 100%;
+    max-width: 1100px;
+    padding: clamp(20px, 4vh, 60px) 24px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: fadeInCraft 0.8s ease-out;
+}
+
+@keyframes fadeInCraft {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   4. NOMBRE DE LA MARCA "A MEDIDA" (TIPOGRAFÍA PURA Y NÍTIDA)
+   ========================================================================== */
+.brand-text-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+}
+
+.brand-name {
+    font-size: clamp(2.8rem, 7.5vw, 5.2rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    margin: 0;
+    user-select: none;
+    text-transform: uppercase;
+}
+
+/* Letra "A": tono caramelo/mostaza limpio */
+.letra-a {
+    color: var(--color-oro-sastre);
+    transition: var(--theme-transition);
+}
+
+/* Palabra "MEDIDA": azul marino nítido */
+.letra-medida {
+    color: var(--color-navy);
+    transition: var(--theme-transition);
+}
+
+/* ==========================================================================
+   5. SUBTÍTULO "C O N F E C C I O N E S"
+   ========================================================================== */
+.brand-subtitle {
+    font-size: clamp(0.95rem, 2vw, 1.35rem);
+    font-weight: 700;
+    color: var(--color-oro-sastre);
+    letter-spacing: 0.45em;
+    margin-top: 16px;
+    text-indent: 0.45em;
+    text-transform: uppercase;
+    transition: var(--theme-transition);
+}
+
+/* ==========================================================================
+   6. CONTACTO ESTILO TARJETA ATELIER (TIPOGRÁFICO PURO, SIN BOTONES)
+   ========================================================================== */
+.tarjeta-contacto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: clamp(24px, 3.5vh, 36px);
+}
+
+.contacto-bloque-whatsapp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contacto-bloque-directo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.contacto-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: clamp(0.82rem, 1.15vw, 0.92rem);
+    font-weight: 500;
+    color: var(--color-navy);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    padding: 2px 0;
+    white-space: nowrap;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.contacto-item:hover {
+    color: var(--color-oro-sastre);
+}
+
+.icono-contacto {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.contacto-item:hover .icono-contacto {
+    opacity: 1;
+}
+
+.separador-contacto {
+    color: var(--color-oro-sastre);
+    font-size: 1.1rem;
+    line-height: 1;
+    user-select: none;
+    opacity: 0.5;
+}
+
+/* ==========================================================================
+   7. MODO NOCHE / OSCURO AUTOMÁTICO (PREFERS-COLOR-SCHEME: DARK)
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: var(--color-navy);
+        background-image:
+            radial-gradient(ellipse at 50% 40%, rgba(31, 42, 68, 0.4) 0%, rgba(15, 21, 33, 0.9) 100%),
+            repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 4px),
+            repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 4px),
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 3px),
+            repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.1) 0px, rgba(0, 0, 0, 0.1) 1px, transparent 1px, transparent 3px);
+        color: var(--color-hilo-hueso);
+    }
+
+    /* Costura en hilo crudo limpia */
+    .linea-pespunte {
+        border-color: var(--color-hilo-crudo);
+        opacity: 0.85;
+    }
+
+    .letra-medida {
+        color: var(--color-hilo-hueso);
+    }
+
+    .brand-subtitle {
+        color: var(--color-oro-brillante);
+    }
+
+    .contacto-item {
+        color: var(--color-hilo-hueso);
+    }
+
+    .contacto-item:hover {
+        color: var(--color-oro-brillante);
+    }
+
+    .separador-contacto {
+        color: var(--color-oro-brillante);
+        opacity: 0.6;
+    }
+}
+
+/* ==========================================================================
+   8. MEDIA QUERIES RESPONSIVE: ESCRITORIO, LANDSCAPE Y PORTRAIT
+   ========================================================================== */
+@media (max-width: 768px) {
+    .marco-costura {
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+    }
+
+    .linea-pespunte {
+        border-width: 3.5px;
+        border-radius: 10px;
+    }
+
+    .brand-subtitle {
+        letter-spacing: 0.35em;
+        text-indent: 0.35em;
+    }
+}
+
+/* --- MODO VERTICAL / PORTRAIT: Un dato debajo de otro --- */
+@media (orientation: portrait), (max-width: 650px) {
+    .contacto-bloque-directo {
+        flex-direction: column;
+        gap: 12px;
+        white-space: normal;
+    }
+
+    .separador-contacto {
+        display: none;
+    }
+
+    .contacto-item {
+        font-size: clamp(0.82rem, 3.2vw, 0.92rem);
+    }
+}
+
+/* --- MODO HORIZONTAL / LANDSCAPE: WhatsApp en línea propia y directo en fila --- */
+@media (orientation: landscape) and (max-height: 650px) {
+    .page-container {
+        padding: 16px 20px;
+    }
+
+    .tarjeta-contacto {
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .contacto-bloque-directo {
+        flex-direction: row;
+        gap: 14px;
+    }
+
+    .separador-contacto {
+        display: inline-block;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+    .brand-name {
+        font-size: clamp(2.2rem, 6vw, 3.2rem);
+    }
+
+    .brand-subtitle {
+        margin-top: 8px;
+        font-size: 0.85rem;
+    }
+
+    .tarjeta-contacto {
+        margin-top: 10px;
+        gap: 6px;
+    }
+}
