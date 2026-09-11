@@ -1,187 +1,10 @@
 /* ==========================================================================
-   A MEDIDA Confecciones - Estilos Principales
-   Sistema "la cinta" en vertical: corte a escuadra arriba, graduación en los
-   dos costados y punta de oro con remache al final del recorrido
+   A MEDIDA Confecciones - Contenido de la página
+   Estas reglas visten lo que vive en index.html: la marca, el servicio, el
+   contacto y los controles del cotizador. Se queda en hoja global a propósito,
+   porque ese contenido no entra en ningún shadow root: así el texto y los
+   enlaces siguen en el HTML y la página se lee aunque el script no cargue.
    ========================================================================== */
-
-:root {
-    /* Paleta del sistema */
-    --azul: #1e2a44;
-    --azul-profundo: #12192b;
-    --azul-linea: #3a4661;
-    --azul-claro: #9aa6bb;
-    --hueso: #d8cdb4;
-    --oro: #a8823a;
-
-    /* Tipografías: la didona firma, la sans informa, la mono cuenta */
-    --fuente-marca: 'Old Standard TT', 'Times New Roman', serif;
-    --fuente-texto: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --fuente-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
-
-    /* Medidas de la cinta */
-    --punta-alto: clamp(52px, 10vw, 78px);
-    --remache: clamp(17px, 3.4vw, 25px);
-    --radio-cinta: clamp(14px, 2.6vw, 22px);
-
-    /* Graduación de tres niveles: centímetro, medio centímetro y milímetro.
-       En vertical la "profundidad" es lo que entra desde cada costado */
-    --gr-prof-cm: clamp(24px, 4.5vw, 44px);
-    --gr-prof-medio: clamp(15px, 2.8vw, 27px);
-    --gr-prof-mm: clamp(9px, 1.6vw, 15px);
-    --gr-trazo-cm: clamp(2.5px, 0.4vw, 4px);
-    --gr-trazo-medio: clamp(2px, 0.35vw, 3.5px);
-    --gr-trazo-mm: clamp(1.8px, 0.3vw, 3px);
-    --gr-paso-cm: 72px;
-    --gr-paso-medio: 36px;
-    --gr-paso-mm: 7.2px;
-    --transicion: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-}
-
-/* ==========================================================================
-   LA CARA DE LA CINTA
-   La cinta muestra siempre el frente azul del diseño, sin modo claro.
-   Cada componente pide un papel (campo, texto, acento, filete) y nunca un
-   color directo de la paleta.
-   ========================================================================== */
-:root {
-    color-scheme: dark;
-
-    --cinta-campo: var(--azul);
-    --cinta-texto: var(--hueso);
-    --cinta-texto-fuerte: #fff;
-    --cinta-descriptor: var(--azul-claro);
-    --cinta-filete: var(--azul-linea);
-    --cinta-acento: var(--oro);
-    --cinta-acento-texto: var(--azul-profundo);
-    --gr-color-cm: var(--oro);
-    --gr-color-mm: var(--hueso);
-    /* Suelo que asoma en las muescas donde termina la cinta */
-    --fondo: var(--azul-profundo);
-}
-
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-html {
-    -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-}
-
-body {
-    background: var(--fondo);
-    color: var(--cinta-texto);
-    font-family: var(--fuente-texto);
-    -webkit-font-smoothing: antialiased;
-}
-
-/* ==========================================================================
-   1. LA CINTA: no va dentro de la página, es la página entera
-   ========================================================================== */
-.cinta {
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    /* Entra cortada a escuadra por arriba y se redondea del lado de la punta */
-    border-radius: 0 0 var(--radio-cinta) var(--radio-cinta);
-    overflow: hidden;
-}
-
-.cinta__cuerpo {
-    position: relative;
-    flex: 1;
-    min-width: 0;
-    background: var(--cinta-campo);
-    display: flex;
-    flex-direction: column;
-}
-
-/* --- Graduación de tres niveles, en los dos costados --- */
-.graduacion {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: var(--gr-prof-cm);
-    pointer-events: none;
-    background-image:
-        repeating-linear-gradient(180deg, var(--gr-color-cm) 0 var(--gr-trazo-cm), transparent var(--gr-trazo-cm) var(--gr-paso-cm)),
-        repeating-linear-gradient(180deg, var(--gr-color-mm) 0 var(--gr-trazo-medio), transparent var(--gr-trazo-medio) var(--gr-paso-medio)),
-        repeating-linear-gradient(180deg, var(--gr-color-mm) 0 var(--gr-trazo-mm), transparent var(--gr-trazo-mm) var(--gr-paso-mm));
-    background-size:
-        var(--gr-prof-cm) 100%,
-        var(--gr-prof-medio) 100%,
-        var(--gr-prof-mm) 100%;
-    background-repeat: repeat-y;
-}
-
-.graduacion--izquierda {
-    left: 0;
-    background-position: left top, left top, left top;
-}
-
-.graduacion--derecha {
-    right: 0;
-    background-position: right top, right top, right top;
-}
-
-/* --- Punta de oro: el último tramo del scroll --- */
-.cinta__punta {
-    flex: none;
-    height: var(--punta-alto);
-    background: var(--oro);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cinta__remache {
-    width: var(--remache);
-    height: var(--remache);
-    border-radius: 50%;
-    background: var(--hueso);
-}
-
-/* ==========================================================================
-   2. TRAMOS: el contenido baja por el centro, libre de la graduación
-   ========================================================================== */
-.tramo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: clamp(20px, 4vw, 30px);
-    padding: clamp(48px, 9vw, 88px) calc(var(--gr-prof-cm) + clamp(16px, 4vw, 40px));
-}
-
-/* La portada entra completa: marca, servicio y contacto sin bajar */
-.tramo--portada {
-    flex: 1;
-    min-height: 100vh;
-    min-height: 100svh;
-    justify-content: center;
-    animation: aparecer 0.7s ease-out;
-}
-
-.tramo--cotizador {
-    padding-bottom: clamp(56px, 10vw, 104px);
-}
-
-@keyframes aparecer {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .tramo--portada { animation: none; }
-}
 
 /* Filete de separación del sistema: 64 × 1 px */
 .filete {
@@ -191,7 +14,7 @@ body {
 }
 
 /* ==========================================================================
-   3. MARCA: didona grabada, "A" en oro y "MEDIDA" en hueso
+   1. MARCA: didona grabada, "A" en oro y "MEDIDA" en hueso
    ========================================================================== */
 .marca {
     display: flex;
@@ -231,7 +54,7 @@ body {
 }
 
 /* ==========================================================================
-   4. TÍTULO DE SERVICIO: la didona firma, la sans informa
+   2. TÍTULO DE SERVICIO: la didona firma, la sans informa
    ========================================================================== */
 .titulo {
     font-family: var(--fuente-marca);
@@ -243,7 +66,6 @@ body {
     text-wrap: balance;
 }
 
-/* Texto de servicio: la sans informa */
 .entrada {
     font-family: var(--fuente-texto);
     font-size: clamp(0.88rem, 2.6vw, 1rem);
@@ -255,7 +77,7 @@ body {
 }
 
 /* ==========================================================================
-   5. CONTACTO: Archivo en hueso, iconos en oro
+   3. CONTACTO: Archivo en hueso, iconos en oro
    ========================================================================== */
 .contacto {
     display: flex;
@@ -302,9 +124,8 @@ body {
 }
 
 /* ==========================================================================
-   6. ACCIÓN: rectángulo cortado a escuadra con borde en oro
+   4. ACCIÓN: rectángulo cortado a escuadra con borde en oro
    ========================================================================== */
-/* Fila de acciones: se parten en columna cuando no caben */
 .acciones {
     display: flex;
     flex-wrap: wrap;
@@ -352,7 +173,7 @@ body {
 }
 
 /* ==========================================================================
-   7. COTIZADOR: campos sobre la cinta, cifras de orden en mono
+   5. COTIZADOR: campos sobre la cinta, cifras de orden en mono
    ========================================================================== */
 .cotizador {
     display: grid;
@@ -449,15 +270,9 @@ button:focus-visible {
 }
 
 /* ==========================================================================
-   8. PANTALLAS PEQUEÑAS
-   La graduación ya se estrecha sola con sus clamp; aquí solo se recupera
-   ancho útil para el texto
+   6. PANTALLAS PEQUEÑAS
    ========================================================================== */
 @media (max-width: 640px) {
-    .tramo {
-        padding-inline: calc(var(--gr-prof-cm) + 12px);
-    }
-
     .contacto__item {
         font-size: 0.8rem;
     }
@@ -470,12 +285,3 @@ button:focus-visible {
         flex: 1 1 100%;
     }
 }
-
-/* --- Apaisado bajo: la primera pantalla deja de ser obligatoria --- */
-@media (orientation: landscape) and (max-height: 560px) {
-    .tramo--portada {
-        min-height: 0;
-        padding-block: clamp(40px, 12vh, 72px);
-    }
-}
-
