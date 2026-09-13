@@ -5,10 +5,10 @@ import './componentes/am-cinta.js';
 import './componentes/am-tramo.js';
 import './componentes/am-cotizador.js';
 
-/* Al entrar con ancla (#cotizador), el navegador salta antes de que los
+/* Al entrar con ancla (#cotizar), el navegador salta antes de que los
    componentes se monten y midan, así que aterriza en el sitio equivocado.
    Se repite el salto cuando la cinta ya tiene su alto definitivo. */
-const componentes = ['am-cinta', 'am-tramo', 'am-cotizador'];
+const componentes = ['am-cinta', 'am-tramo', 'am-cotizador', 'am-foto'];
 
 Promise.all(componentes.map((nombre) => customElements.whenDefined(nombre)))
     .then(() => {

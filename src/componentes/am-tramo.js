@@ -4,9 +4,9 @@ import { LitElement, html, css } from 'lit';
  * Un tramo de la cinta: el contenido baja por el centro, libre de la
  * graduación de los costados.
  *
- * Con el atributo `portada` ocupa la primera pantalla completa, que es lo que
- * permite entrar y encontrar marca, servicio y contacto sin bajar.
- * Con `ultimo` deja más aire abajo, antes de la punta.
+ * Con `portada` ocupa la primera pantalla y centra todo. Sin atributo es el
+ * tramo de trabajo, que alinea a la izquierda y deja aire abajo, antes de
+ * la punta.
  *
  * El relleno vive en un envoltorio interno y no en `:host` a propósito: el
  * reset universal de la hoja global (`* { padding: 0 }`) alcanza al host y le
@@ -21,7 +21,6 @@ export class AmTramo extends LitElement {
         }
 
         :host([portada]) {
-            flex: 1;
             min-height: 100vh;
             min-height: 100svh;
             animation: aparecer 0.7s ease-out;
@@ -31,18 +30,16 @@ export class AmTramo extends LitElement {
             flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: clamp(20px, 4vw, 30px);
-            padding: clamp(48px, 9vw, 88px) calc(var(--gr-prof-cm) + clamp(16px, 4vw, 40px));
+            gap: 32px;
+            padding: 8px var(--aire-lateral) 80px;
         }
 
         :host([portada]) .contenido {
+            align-items: center;
             justify-content: center;
-        }
-
-        :host([ultimo]) .contenido {
-            padding-bottom: clamp(56px, 10vw, 104px);
+            text-align: center;
+            gap: 40px;
+            padding: 96px var(--aire-lateral) 72px;
         }
 
         @keyframes aparecer {
@@ -54,12 +51,6 @@ export class AmTramo extends LitElement {
             :host([portada]) { animation: none; }
         }
 
-        @media (max-width: 640px) {
-            .contenido {
-                padding-inline: calc(var(--gr-prof-cm) + 12px);
-            }
-        }
-
         /* Apaisado bajo: la primera pantalla deja de ser obligatoria */
         @media (orientation: landscape) and (max-height: 560px) {
             :host([portada]) {
@@ -67,7 +58,7 @@ export class AmTramo extends LitElement {
             }
 
             :host([portada]) .contenido {
-                padding-block: clamp(40px, 12vh, 72px);
+                padding-block: 56px 48px;
             }
         }
     `;
