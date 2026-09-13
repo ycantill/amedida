@@ -276,110 +276,56 @@ am-cotizador {
 }
 
 /* ==========================================================================
-   5. FOTO DEL UNIFORME
+   5. CATÁLOGO DE PRENDAS
+   Tarjetas de dos columnas con el dibujo de cada prenda
    ========================================================================== */
-am-foto {
-    display: flex;
-    flex-direction: column;
+.catalogo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
 
-am-foto:not(:defined) { display: none; }
-
-.foto__opciones {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.foto__opciones--fila { flex-direction: row; }
-.foto__opciones--fila > * { flex: 1; }
-
-/* El control nativo se esconde y la etiqueta hace de botón */
-.foto__entrada {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    border: 0;
-}
-
-label.boton { position: relative; }
-
-label.boton:focus-within {
-    outline: 2px solid var(--cinta-acento);
-    outline-offset: 3px;
-}
-
-.foto__vista {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.foto__marco {
-    position: relative;
-    border: 1px solid var(--cinta-filete);
-}
-
-.foto__lamina {
-    display: block;
-    width: 100%;
-    height: 220px;
-    background-color: var(--azul-hondo);
-    background-size: cover;
-    background-position: center;
-}
-
-.foto__velo {
-    position: absolute;
-    inset: 0;
-    background: rgba(30, 42, 68, 0.72);
+.prenda-tarjeta {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: 12px;
+    min-height: 132px;
+    padding: 18px 10px;
+    border: 1px solid var(--cinta-filete);
+    background: none;
+    cursor: pointer;
+    text-align: center;
+    color: var(--cinta-descriptor);
+    transition: var(--transicion);
 }
 
-.foto__velo-texto {
-    font-family: var(--fuente-mono);
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+.prenda-tarjeta:hover {
+    border-color: var(--cinta-acento);
     color: var(--cinta-texto);
 }
 
-/* Un tramo de cinta que corre mientras se prepara la foto */
-.foto__pulso {
-    width: 60%;
-    height: 3px;
-    background-image: repeating-linear-gradient(90deg, var(--cinta-acento) 0 3px, transparent 3px 12px);
-    background-repeat: repeat-x;
-    animation: correr 1.1s linear infinite;
+.prenda-tarjeta--activa {
+    background: rgba(168, 130, 58, 0.16);
+    border-color: var(--cinta-acento);
+    color: var(--cinta-texto-fuerte);
 }
 
-@keyframes correr {
-    from { background-position: 0 0; }
-    to   { background-position: 12px 0; }
+/* El dibujo se tiñe con el color de la tarjeta */
+.prenda-tarjeta__dibujo {
+    flex: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .foto__pulso { animation: none; }
-}
-
-.foto__cifras {
-    font-family: var(--fuente-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--cinta-descriptor);
-    font-variant-numeric: tabular-nums;
+.prenda-tarjeta__nombre {
+    font-family: var(--fuente-texto);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.01em;
 }
 
 /* ==========================================================================
-   6. FICHAS DE PRENDA
+   6. FICHA: el interruptor del bordado
    ========================================================================== */
 .fichas {
     display: flex;
@@ -412,12 +358,6 @@ label.boton:focus-within {
 /* ==========================================================================
    7. CAMPOS
    ========================================================================== */
-.campos {
-    display: flex;
-    flex-direction: column;
-    gap: 26px;
-}
-
 .campo {
     display: flex;
     flex-direction: column;
@@ -643,9 +583,9 @@ label.boton:focus-within {
 }
 
 /* ==========================================================================
-   10. CIERRE
+   10. DESPEDIDA
    ========================================================================== */
-.cierre {
+.despedida {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -654,7 +594,7 @@ label.boton:focus-within {
     text-align: center;
 }
 
-.cierre__frase {
+.despedida__frase {
     font-family: var(--fuente-marca);
     font-weight: 400;
     font-size: 18px;
@@ -663,7 +603,7 @@ label.boton:focus-within {
     text-wrap: pretty;
 }
 
-.cierre__pie {
+.despedida__pie {
     font-family: var(--fuente-texto);
     font-size: 14px;
     line-height: 1.6;
@@ -686,4 +626,39 @@ button:focus-visible {
     .acciones { flex-direction: column; }
     .contacto__item { font-size: 15px; }
     .contacto__item--correo { font-size: 14px; }
+}
+
+/* ==========================================================================
+   12. BARRA FLOTANTE
+   Aparece abajo cuando lo que toca hacer a continuación quedó fuera de la
+   pantalla. Se desvanece sobre el campo de la cinta para no cortar en seco.
+   ========================================================================== */
+.flotante {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    /* Solo el botón recibe toques: el resto deja pasar el scroll */
+    pointer-events: none;
+}
+
+.flotante__caja {
+    width: 100%;
+    max-width: var(--columna);
+    padding: 14px var(--aire-lateral) 18px;
+    background: linear-gradient(
+        180deg,
+        rgba(30, 42, 68, 0) 0%,
+        rgba(30, 42, 68, 0.92) 34%,
+        var(--cinta-campo) 100%
+    );
+    pointer-events: auto;
+}
+
+.flotante .boton {
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(22, 32, 47, 0.45);
 }

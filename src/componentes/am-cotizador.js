@@ -3,21 +3,27 @@ import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 import {
     CATALOGO, TARIFAS, TARIFA_POR_DEFECTO, ESCALA, BORDADO, TIPOS,
-    descuentoPorVolumen, moneda,
+    idDe, descuentoPorVolumen, moneda,
 } from '../catalogo.js';
-import './am-foto.js';
+import { ICONOS } from './iconos-prenda.js';
 
 const WHATSAPP = '573000000000';
 const CORREO = 'contacto@amedidaconfecciones.com';
 
 const LINEA_VACIA = { tallas: {}, bordado: false, nota: '' };
 
+/* Aire que se deja al traer algo a la vista, para que no quede pegado al borde */
+const AIRE = 24;
+
 /**
- * El cotizador, en tres pasos que se van revelando.
+ * El cotizador, en dos pasos que se van revelando.
  *
- * 1. Prendas: foto del uniforme y catálogo.
+ * 1. Prendas: catálogo de tarjetas con el dibujo de cada prenda.
  * 2. Cantidades: tallas, bordado y observaciones por prenda, y el estimado.
- * 3. Sus datos: a quién le cotizamos y por dónde sigue la conversación.
+ *
+ * Una barra flotante aparece abajo cuando lo que toca hacer a continuación
+ * quedó fuera de la pantalla. Así el recorrido no se interrumpe sin mover la
+ * página bajo los dedos de quien está tocando tarjetas.
  *
  * El precio que muestra es de referencia. Sale de las tarifas del documento
  * de diseño y del descuento por volumen, y así se dice en pantalla.
@@ -30,11 +36,9 @@ export class AmCotizador extends LitElement {
         lineas: { state: true },
         estimado: { state: true },
         calculando: { state: true },
-        hayFoto: { state: true },
-        institucion: { state: true },
-        ciudad: { state: true },
-        nombre: { state: true },
-        contacto: { state: true },
+        continuarALaVista: { state: true },
+        calcularALaVista: { state: true },
+        siguienteALaVista: { state: true },
     };
 
     /* Los controles se quedan en el DOM de la página. Dentro de un shadow root
@@ -45,23 +49,26 @@ export class AmCotizador extends LitElement {
 
     constructor() {
         super();
+        this.temporizador = null;
+        this.vigias = new Map();
         this.paso = 1;
         this.tipo = TIPOS[0];
         this.seleccion = [];
         this.lineas = {};
         this.estimado = null;
         this.calculando = false;
-        this.hayFoto = false;
-        this.institucion = '';
-        this.ciudad = '';
-        this.nombre = '';
-        this.contacto = '';
-        this.temporizador = null;
+        /* Se empieza suponiendo que todo está a la vista: así la barra no
+           parpadea antes de la primera medición */
+        this.continuarALaVista = true;
+        this.calcularALaVista = true;
+        this.siguienteALaVista = true;
     }
 
     disconnectedCallback() {
         super.disconnectedCallback();
         clearTimeout(this.temporizador);
+        this.vigias.forEach((vigia) => vigia.observador.disconnect());
+        this.vigias.clear();
     }
 
     /* ---------- Lectura ---------- */
@@ -83,13 +90,16 @@ export class AmCotizador extends LitElement {
             .join(', ');
     }
 
-    get catalogoVisible() {
-        /* Una prenda escogida que no esté en el catálogo se muestra igual */
-        return CATALOGO.concat(this.seleccion.filter((p) => !CATALOGO.includes(p)));
-    }
-
     get puedeCalcular() {
         return this.seleccion.some((prenda) => this.unidades(prenda) > 0);
+    }
+
+    /* La primera prenda escogida que sigue sin unidades, una vez que ya se
+       llenó alguna. Es lo que hay que ir a completar. */
+    get siguientePendiente() {
+        if (this.paso !== 2) return null;
+        if (!this.puedeCalcular) return null;
+        return this.seleccion.find((prenda) => this.unidades(prenda) === 0) ?? null;
     }
 
     /* ---------- Escritura ---------- */
@@ -123,13 +133,94 @@ export class AmCotizador extends LitElement {
         this.olvidarEstimado();
     }
 
-    irAPaso2() {
-        if (!this.seleccion.length) return;
-        this.paso = 2;
-        this.updateComplete.then(() => {
-            this.querySelector('#paso-2')?.scrollIntoView({ block: 'start' });
+    /* ---------- Desplazamiento ---------- */
+
+    /* Mueve la página, no el elemento.
+       `scrollIntoView` busca el ancestro con scroll y se topa con la columna
+       de cinta, que lleva `overflow: hidden` y no se mueve, así que el
+       documento se queda quieto. Calcular el destino evita esa ambigüedad. */
+    bajarA(selector) {
+        const destino = this.querySelector(selector);
+        if (!destino) return;
+        const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({
+            top: Math.max(0, window.scrollY + destino.getBoundingClientRect().top - AIRE),
+            behavior: quieto ? 'instant' : 'smooth',
         });
     }
+
+    async irAPaso2() {
+        if (!this.seleccion.length) return;
+        this.paso = 2;
+        await this.updateComplete;
+        this.bajarA('#paso-2');
+    }
+
+    /* ---------- Vigías de visibilidad ---------- */
+
+    /* La barra flotante solo aparece cuando el siguiente paso quedó fuera de
+       la pantalla. Hay que mirar tres elementos, y cuál importa cambia con el
+       estado, así que los observadores se rehacen tras cada render. */
+    updated() {
+        const objetivos = {
+            continuar: ['#continuar', 'continuarALaVista'],
+            calcular: ['#calcular', 'calcularALaVista'],
+            siguiente: [
+                this.siguientePendiente ? `#linea-${idDe(this.siguientePendiente)}` : null,
+                'siguienteALaVista',
+            ],
+        };
+
+        Object.entries(objetivos).forEach(([clave, [selector, campo]]) => {
+            const elemento = selector ? this.querySelector(selector) : null;
+            const vigia = this.vigias.get(clave);
+
+            if (vigia?.elemento === elemento) return;
+            vigia?.observador.disconnect();
+
+            if (!elemento) {
+                this.vigias.delete(clave);
+                this[campo] = true;
+                return;
+            }
+
+            const observador = new IntersectionObserver(([entrada]) => {
+                this[campo] = entrada.isIntersecting;
+            }, { rootMargin: '0px 0px -12px 0px', threshold: 0.6 });
+
+            observador.observe(elemento);
+            this.vigias.set(clave, { elemento, observador });
+        });
+    }
+
+    /* Lo que toca hacer ahora, si además quedó fuera de la pantalla */
+    get flotante() {
+        const siguiente = this.siguientePendiente;
+
+        if (siguiente && !this.siguienteALaVista) {
+            return {
+                texto: `Siguiente: ${siguiente}`,
+                accion: () => this.bajarA(`#linea-${idDe(siguiente)}`),
+            };
+        }
+
+        if (this.paso === 2 && this.puedeCalcular && !this.calculando
+            && !this.estimado && !this.calcularALaVista) {
+            return { texto: 'Calcular precio aproximado', accion: () => this.calcular() };
+        }
+
+        if (this.paso === 1 && this.seleccion.length && !this.continuarALaVista) {
+            const cuantas = this.seleccion.length;
+            return {
+                texto: cuantas === 1 ? 'Continuar con 1 prenda' : `Continuar con ${cuantas} prendas`,
+                accion: () => this.irAPaso2(),
+            };
+        }
+
+        return null;
+    }
+
+    /* ---------- Cálculo ---------- */
 
     calcular() {
         if (!this.puedeCalcular || this.calculando) return;
@@ -138,7 +229,7 @@ export class AmCotizador extends LitElement {
 
         /* Un respiro corto: el cálculo es instantáneo, pero sin él el precio
            aparece de golpe y no se lee como una respuesta */
-        this.temporizador = setTimeout(() => {
+        this.temporizador = setTimeout(async () => {
             const conUnidades = this.seleccion
                 .map((prenda) => ({ prenda, cantidad: this.unidades(prenda) }))
                 .filter((l) => l.cantidad > 0);
@@ -164,6 +255,9 @@ export class AmCotizador extends LitElement {
                 descuento,
                 total: detalle.reduce((suma, l) => suma + l.subtotal, 0),
             };
+
+            await this.updateComplete;
+            this.bajarA('#precio');
         }, 900);
     }
 
@@ -172,7 +266,6 @@ export class AmCotizador extends LitElement {
     get mensaje() {
         const lineas = ['Hola A Medida Confecciones, quiero cotizar una dotación.'];
         lineas.push(`Tipo: ${this.tipo}`);
-        if (this.institucion.trim()) lineas.push(`Institución: ${this.institucion.trim()}`);
 
         this.seleccion.forEach((prenda) => {
             const { bordado, nota } = this.linea(prenda);
@@ -189,10 +282,6 @@ export class AmCotizador extends LitElement {
         if (this.estimado) {
             lineas.push(`Estimado en línea: ${moneda(this.estimado.total)} por ${this.estimado.unidades} unidades.`);
         }
-        if (this.ciudad.trim()) lineas.push(`Ciudad: ${this.ciudad.trim()}`);
-        if (this.nombre.trim()) lineas.push(`Nombre: ${this.nombre.trim()}`);
-        if (this.contacto.trim()) lineas.push(`Teléfono: ${this.contacto.trim()}`);
-        if (this.hayFoto) lineas.push('Tengo una foto del uniforme para enviarles.');
 
         return lineas.join('\n');
     }
@@ -218,36 +307,26 @@ export class AmCotizador extends LitElement {
         `;
     }
 
-    ficha(prenda, activa, alPulsar) {
+    /* ---------- Paso 1 ---------- */
+
+    tarjetaPrenda({ nombre, id }) {
+        const activa = this.seleccion.includes(nombre);
         return html`
             <button
                 type="button"
-                class=${classMap({ ficha: true, 'ficha--activa': activa })}
+                class=${classMap({ 'prenda-tarjeta': true, 'prenda-tarjeta--activa': activa })}
                 aria-pressed=${activa}
-                @click=${alPulsar}
-            >${prenda}</button>
+                @click=${() => this.alternarPrenda(nombre)}
+            >
+                <svg class="prenda-tarjeta__dibujo" width="62" height="62" viewBox="0 0 64 64"
+                     fill="none" stroke="currentColor" stroke-width="1.6"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    ${ICONOS[id]}
+                </svg>
+                <span class="prenda-tarjeta__nombre">${nombre}</span>
+            </button>
         `;
     }
-
-    campoTexto(clave, etiqueta, ejemplo, tipo = 'text') {
-        return html`
-            <label class="campo">
-                <span class="campo__etiqueta">${etiqueta}</span>
-                <input
-                    class="campo__control"
-                    id=${clave}
-                    name=${clave}
-                    type=${tipo}
-                    inputmode=${tipo === 'tel' ? 'tel' : nothing}
-                    placeholder=${ejemplo}
-                    .value=${this[clave]}
-                    @input=${(e) => { this[clave] = e.target.value; }}
-                >
-            </label>
-        `;
-    }
-
-    /* ---------- Paso 1 ---------- */
 
     pasoPrendas() {
         const hayEleccion = this.seleccion.length > 0;
@@ -257,17 +336,11 @@ export class AmCotizador extends LitElement {
 
             <div class="bloque">
                 <h2 class="titulo">¿Qué prendas necesita?</h2>
-                <p class="entrada">Tome una foto del uniforme y guárdela para la cotización, o escoja las prendas de la lista.</p>
+                <p class="entrada">Toque las prendas que va a cotizar. Puede escoger varias.</p>
             </div>
 
-            <am-foto @foto-cambio=${(e) => { this.hayFoto = e.detail.hayFoto; }}></am-foto>
-
-            <div class="bloque">
-                <span class="rotulo">Catálogo de prendas</span>
-                <div class="fichas">
-                    ${repeat(this.catalogoVisible, (p) => p, (prenda) =>
-                        this.ficha(prenda, this.seleccion.includes(prenda), () => this.alternarPrenda(prenda)))}
-                </div>
+            <div class="catalogo">
+                ${CATALOGO.map((prenda) => this.tarjetaPrenda(prenda))}
             </div>
 
             <div class="bloque">
@@ -279,29 +352,36 @@ export class AmCotizador extends LitElement {
                     ? html`
                         <button
                             type="button"
+                            id="continuar"
                             class=${classMap({ boton: true, 'boton--lleno': hayEleccion, 'boton--inerte': !hayEleccion })}
                             ?disabled=${!hayEleccion}
                             @click=${this.irAPaso2}
                         >
                             <span>Continuar</span>
-                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
-                                <line x1="12" y1="4" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
-                                <path d="M7 14l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
+                            ${this.flechaAbajo()}
                         </button>`
                     : nothing}
             </div>
         `;
     }
 
+    flechaAbajo() {
+        return html`
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+                <line x1="12" y1="4" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+                <path d="M7 14l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        `;
+    }
+
     /* ---------- Paso 2 ---------- */
 
-    tarjetaPrenda(prenda) {
+    tarjetaLinea(prenda) {
         const { bordado, nota, tallas } = this.linea(prenda);
         const cantidad = this.unidades(prenda);
 
         return html`
-            <article class="prenda">
+            <article class="prenda" id="linea-${idDe(prenda)}">
                 <header class="prenda__cabeza">
                     <h3 class="prenda__nombre">${prenda}</h3>
                     <span class="prenda__total">
@@ -312,14 +392,15 @@ export class AmCotizador extends LitElement {
                 <div class="tallas">
                     ${ESCALA.map((talla) => html`
                         <div class="talla">
-                            <label class="talla__rotulo" for="${prenda}-${talla}">${talla}</label>
+                            <label class="talla__rotulo" for="${idDe(prenda)}-${talla}">${talla}</label>
                             <input
                                 class=${classMap({ talla__control: true, 'talla__control--puesta': Boolean(tallas[talla]) })}
-                                id="${prenda}-${talla}"
+                                id="${idDe(prenda)}-${talla}"
                                 type="number"
                                 inputmode="numeric"
                                 min="0"
                                 placeholder="0"
+                                autocomplete="off"
                                 .value=${tallas[talla] ?? ''}
                                 @input=${(e) => this.ponerTalla(prenda, talla, e.target.value)}
                             >
@@ -328,10 +409,12 @@ export class AmCotizador extends LitElement {
                 </div>
 
                 <div class="prenda__extra">
-                    ${this.ficha('Bordado del logo', bordado, () => {
-                        this.cambiarLinea(prenda, { bordado: !bordado });
-                        this.olvidarEstimado();
-                    })}
+                    <button
+                        type="button"
+                        class=${classMap({ ficha: true, 'ficha--activa': bordado })}
+                        aria-pressed=${bordado}
+                        @click=${() => { this.cambiarLinea(prenda, { bordado: !bordado }); this.olvidarEstimado(); }}
+                    >Bordado del logo</button>
                     <span class="prenda__tarifa">+ ${moneda(BORDADO)} por unidad</span>
                 </div>
 
@@ -341,6 +424,7 @@ export class AmCotizador extends LitElement {
                         class="campo__control"
                         type="text"
                         placeholder="Tela antifluido, color azul"
+                        autocomplete="off"
                         .value=${nota}
                         @input=${(e) => this.cambiarLinea(prenda, { nota: e.target.value })}
                     >
@@ -353,7 +437,7 @@ export class AmCotizador extends LitElement {
         const { detalle, unidades, descuento, total } = this.estimado;
 
         return html`
-            <section class="precio">
+            <section class="precio" id="precio">
                 <span class="rotulo rotulo--acento">Precio aproximado</span>
 
                 <div class="precio__lineas">
@@ -408,12 +492,13 @@ export class AmCotizador extends LitElement {
             </label>
 
             <div class="prendas">
-                ${repeat(this.seleccion, (p) => p, (prenda) => this.tarjetaPrenda(prenda))}
+                ${repeat(this.seleccion, (p) => p, (prenda) => this.tarjetaLinea(prenda))}
             </div>
 
             <div class="bloque">
                 <button
                     type="button"
+                    id="calcular"
                     class=${classMap({ boton: true, 'boton--marco': this.puedeCalcular, 'boton--inerte': !this.puedeCalcular })}
                     ?disabled=${!this.puedeCalcular || this.calculando}
                     @click=${this.calcular}
@@ -427,22 +512,15 @@ export class AmCotizador extends LitElement {
 
                 ${this.estimado ? this.tablaPrecio() : nothing}
             </div>
+
+            ${this.estimado ? this.cierre() : nothing}
         `;
     }
 
-    /* ---------- Paso 3 ---------- */
+    /* ---------- Cierre ---------- */
 
-    pasoDatos() {
+    cierre() {
         return html`
-            ${this.rotuloPaso(3, 'Sus datos')}
-
-            <div class="campos">
-                ${this.campoTexto('institucion', 'Institución o empresa', 'Colegio San Bernardo')}
-                ${this.campoTexto('ciudad', 'Ciudad', 'Bogotá')}
-                ${this.campoTexto('nombre', 'Su nombre', 'Nombre y apellido')}
-                ${this.campoTexto('contacto', 'Teléfono de contacto', '300 000 0000', 'tel')}
-            </div>
-
             <div class="bloque">
                 <p class="entrada">Le llevamos su cotización al canal que prefiera para revisar telas, bordado y cerrar el pedido.</p>
 
@@ -461,16 +539,28 @@ export class AmCotizador extends LitElement {
                     <span>Continuar por correo</span>
                 </a>
 
-                ${this.hayFoto
-                    ? html`<p class="nota">Adjunte la foto del uniforme en el chat o en el correo al continuar.</p>`
-                    : nothing}
+                <footer class="despedida">
+                    <span class="puntada puntada--corta" aria-hidden="true"></span>
+                    <p class="despedida__frase">Gracias por confiarnos su dotación.</p>
+                    <p class="despedida__pie">Tomamos las medidas, usted se ocupa del resto.</p>
+                </footer>
             </div>
+        `;
+    }
 
-            <footer class="cierre">
-                <span class="puntada puntada--corta" aria-hidden="true"></span>
-                <p class="cierre__frase">Gracias por confiarnos su dotación.</p>
-                <p class="cierre__pie">Tomamos las medidas, usted se ocupa del resto.</p>
-            </footer>
+    barraFlotante() {
+        const flotante = this.flotante;
+        if (!flotante) return nothing;
+
+        return html`
+            <div class="flotante">
+                <div class="flotante__caja">
+                    <button type="button" class="boton boton--lleno" @click=${flotante.accion}>
+                        <span>${flotante.texto}</span>
+                        ${this.flechaAbajo()}
+                    </button>
+                </div>
+            </div>
         `;
     }
 
@@ -478,7 +568,7 @@ export class AmCotizador extends LitElement {
         return html`
             ${this.pasoPrendas()}
             ${this.paso === 2 ? this.pasoCantidades() : nothing}
-            ${this.paso === 2 && this.estimado ? this.pasoDatos() : nothing}
+            ${this.barraFlotante()}
         `;
     }
 }
