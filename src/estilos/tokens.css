@@ -8,11 +8,16 @@
 :root {
     /* Paleta del sistema */
     --azul: #1e2a44;
-    --azul-profundo: #12192b;
+    --azul-hondo: #16202f;
     --azul-linea: #3a4661;
     --azul-claro: #9aa6bb;
+    --azul-apagado: #5d6a83;
+    --azul-marcador: #6d7a92;
     --hueso: #d8cdb4;
+    --crema: #f4f1ea;
     --oro: #a8823a;
+    --oro-vivo: #c49b47;
+    --suelo: #efece6;
 
     /* Tipografías: la didona firma, la sans informa, la mono cuenta */
     --fuente-marca: 'Old Standard TT', 'Times New Roman', serif;
@@ -20,21 +25,24 @@
     --fuente-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
 
     /* Medidas de la cinta */
-    --punta-alto: clamp(52px, 10vw, 78px);
-    --remache: clamp(17px, 3.4vw, 25px);
-    --radio-cinta: clamp(14px, 2.6vw, 22px);
+    --columna: 430px;
+    --punta-alto: 84px;
+    --remache: 26px;
+    --radio-cinta: 22px;
+    --aire-lateral: clamp(24px, 10.2vw, 44px);
 
     /* Graduación de tres niveles: centímetro, medio centímetro y milímetro.
        En vertical la "profundidad" es lo que entra desde cada costado */
-    --gr-prof-cm: clamp(24px, 4.5vw, 44px);
-    --gr-prof-medio: clamp(15px, 2.8vw, 27px);
-    --gr-prof-mm: clamp(9px, 1.6vw, 15px);
-    --gr-trazo-cm: clamp(2.5px, 0.4vw, 4px);
-    --gr-trazo-medio: clamp(2px, 0.35vw, 3.5px);
-    --gr-trazo-mm: clamp(1.8px, 0.3vw, 3px);
-    --gr-paso-cm: 72px;
-    --gr-paso-medio: 36px;
-    --gr-paso-mm: 7.2px;
+    --gr-prof-cm: 24px;
+    --gr-prof-medio: 14px;
+    --gr-prof-mm: 8px;
+    --gr-trazo-cm: 3px;
+    --gr-trazo-medio: 2.5px;
+    --gr-trazo-mm: 2px;
+    --gr-paso-cm: 40px;
+    --gr-paso-medio: 20px;
+    --gr-paso-mm: 4px;
+
     --transicion: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -49,15 +57,20 @@
 
     --cinta-campo: var(--azul);
     --cinta-texto: var(--hueso);
-    --cinta-texto-fuerte: #fff;
+    --cinta-texto-fuerte: var(--crema);
     --cinta-descriptor: var(--azul-claro);
+    --cinta-apagado: var(--azul-apagado);
     --cinta-filete: var(--azul-linea);
     --cinta-acento: var(--oro);
-    --cinta-acento-texto: var(--azul-profundo);
+    --cinta-acento-vivo: var(--oro-vivo);
+    /* Azul hondo y no el azul de campo: sobre oro, el de campo se queda
+       en 4,0 a 1 y no alcanza para texto chico */
+    --cinta-acento-texto: var(--azul-hondo);
     --gr-color-cm: var(--oro);
     --gr-color-mm: var(--hueso);
-    /* Suelo que asoma en las muescas donde termina la cinta */
-    --fondo: var(--azul-profundo);
+
+    /* Suelo sobre el que flota la columna de cinta */
+    --fondo: var(--suelo);
 }
 
 *, *::before, *::after {
@@ -76,19 +89,23 @@ html {
 }
 
 body {
+    min-height: 100vh;
     background: var(--fondo);
     color: var(--cinta-texto);
     font-family: var(--fuente-texto);
     -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
 }
 
-/* Antes de que los componentes se registren, que al menos apilen bien.
-   Evita el salto entre el HTML crudo y el componente ya montado. */
+/* Antes de que los componentes se registren, que al menos apilen bien */
 am-cinta:not(:defined),
 am-tramo:not(:defined) {
     display: block;
 }
 
 am-cinta:not(:defined) {
+    width: 100%;
+    max-width: var(--columna);
     background: var(--cinta-campo);
 }
