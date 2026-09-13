@@ -5,9 +5,26 @@
    ========================================================================== */
 
 export const CATALOGO = [
-    'Camisa', 'Blusa', 'Camiseta polo', 'Pantalón', 'Falda', 'Sudadera',
-    'Chaqueta', 'Chaleco', 'Bata', 'Filipina', 'Delantal', 'Overol',
+    { nombre: 'Camisa', id: 'camisa' },
+    { nombre: 'Blusa', id: 'blusa' },
+    { nombre: 'Camiseta polo', id: 'polo' },
+    { nombre: 'Pantalón', id: 'pantalon' },
+    { nombre: 'Falda', id: 'falda' },
+    { nombre: 'Sudadera', id: 'sudadera' },
+    { nombre: 'Chaqueta', id: 'chaqueta' },
+    { nombre: 'Chaleco', id: 'chaleco' },
+    { nombre: 'Bata', id: 'bata' },
+    { nombre: 'Filipina', id: 'filipina' },
+    { nombre: 'Delantal', id: 'delantal' },
+    { nombre: 'Overol', id: 'overol' },
 ];
+
+const POR_NOMBRE = new Map(CATALOGO.map((prenda) => [prenda.nombre, prenda]));
+
+/* El identificador sirve para nombrar elementos y poder volver a ellos */
+export function idDe(nombre) {
+    return POR_NOMBRE.get(nombre)?.id ?? '';
+}
 
 export const TARIFAS = {
     'Camisa': 38000, 'Blusa': 40000, 'Camiseta polo': 32000, 'Pantalón': 52000,
@@ -15,7 +32,7 @@ export const TARIFAS = {
     'Bata': 58000, 'Filipina': 55000, 'Delantal': 28000, 'Overol': 92000,
 };
 
-/* Prenda que no está en el catálogo: se cobra al promedio del sistema */
+/* Red de seguridad si alguna vez entra una prenda fuera del catálogo */
 export const TARIFA_POR_DEFECTO = 45000;
 
 export const ESCALA = ['XS', 'S', 'M', 'L', 'XL'];
@@ -32,7 +49,7 @@ const TRAMOS = [
 ];
 
 export function descuentoPorVolumen(unidades) {
-    return TRAMOS.find((t) => unidades >= t.desde)?.descuento ?? 0;
+    return TRAMOS.find((tramo) => unidades >= tramo.desde)?.descuento ?? 0;
 }
 
 const FORMATO = new Intl.NumberFormat('es-CO', {
