@@ -4,6 +4,9 @@ Sitio de una página. La página entera es un tramo de cinta métrica: entra
 cortada a escuadra por arriba, lleva la graduación en los dos costados y
 termina en la punta de oro con remache.
 
+Todo el código, incluidos los comentarios, está en inglés. El texto que ve el
+cliente se queda en español.
+
 ## Desarrollo
 
 ```
@@ -40,33 +43,34 @@ de esos tres elementos, así la página no se mueve bajo los dedos de quien est�
 tocando tarjetas.
 
 El catálogo y el precio vienen de la API (ver abajo). Los dibujos de las
-prendas están en `src/componentes/iconos-prenda.js`, con la misma clave que
+prendas están en `src/components/garment-icons.js`, con la misma clave que
 cada prenda tiene en la base.
 
 ## La API
 
 Dos Cloud Functions en `functions/`, que leen la Realtime Database
-(`amedida-b6831-default-rtdb`) bajo `/catalogo`:
+(`amedida-b6831-default-rtdb`) bajo `/catalog`:
 
-- `GET /catalogo` — prendas (`id`, `nombre`), tallas, tipos de dotación y
-  precio del bordado. No incluye tarifas ni tramos de descuento.
-- `POST /cotizar` — recibe
-  `{ "tipo": "Salud", "lineas": [{ "prenda": "camisa", "tallas": { "M": 10 }, "bordado": true }] }`
-  y devuelve `detalle`, `unidades`, `descuento` y `total`. Responde 400 si el
+- `GET /catalog` — prendas (`id`, `name`), tallas (`sizes`), tipos de dotación
+  (`types`) y precio del bordado (`embroidery`). No incluye tarifas (`rate`) ni
+  tramos de descuento (`tiers`).
+- `POST /quote` — recibe
+  `{ "type": "Salud", "lines": [{ "garment": "shirt", "sizes": { "M": 10 }, "embroidery": true }] }`
+  y devuelve `items`, `units`, `discount` y `total`. Responde 400 si el
   pedido trae prendas, tallas o cantidades que no existen.
 
 Las reglas de la base (`database.rules.json`) cierran lectura y escritura:
 solo las funciones entran, con el Admin SDK. Las reglas del cálculo están en
-`functions/cotizacion.js` y se prueban con `npm test` dentro de `functions/`.
+`functions/quote.js` y se prueban con `npm test` dentro de `functions/`.
 
-Cambiar un precio, una prenda o un tramo es editar `database/catalogo.json` y
+Cambiar un precio, una prenda o un tramo es editar `database/catalog.json` y
 subirlo:
 
 ```
-firebase database:set /catalogo database/catalogo.json
+firebase database:set /catalog database/catalog.json
 ```
 
-Una prenda nueva necesita además su dibujo en `iconos-prenda.js`.
+Una prenda nueva necesita además su dibujo en `garment-icons.js`.
 
 Publicar las funciones y las reglas (requiere el plan Blaze):
 
@@ -78,7 +82,7 @@ Para trabajar en local contra los emuladores:
 
 ```
 firebase emulators:start --only functions,database
-FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 firebase database:set /catalogo database/catalogo.json
+FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 firebase database:set /catalog database/catalog.json
 echo "VITE_API=http://127.0.0.1:5001/amedida-b6831/us-central1" > .env.local
 npm run dev
 ```
@@ -88,14 +92,15 @@ producción).
 
 ## Estructura
 
-- `src/estilos/tokens.css` — colores, tipografías y medidas del sistema.
+- `src/styles/tokens.css` — colores, tipografías y medidas del sistema.
   Única hoja donde se cambia la identidad.
-- `src/estilos/contenido.css` — viste lo que vive en `index.html`.
-- `src/componentes/` — la cinta, el tramo y el cotizador.
-- `src/catalogo.js` — formato de precios.
+- `src/styles/content.css` — viste lo que vive en `index.html`.
+- `src/components/` — la cinta (`am-tape`), el tramo (`am-segment`) y el
+  cotizador (`am-quoter`).
+- `src/format.js` — formato de precios.
 - `src/api.js` — cliente de la API.
 - `functions/` — la API del cotizador.
-- `database/catalogo.json` — prendas, tarifas, tallas y descuentos que van a la base.
+- `database/catalog.json` — prendas, tarifas, tallas y descuentos que van a la base.
 - `public/` — lo que se copia tal cual: CNAME y favicon.
 
 El texto y los enlaces se quedan en `index.html`, fuera de los componentes,

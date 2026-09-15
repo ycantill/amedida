@@ -1,41 +1,41 @@
-/* Punto de entrada: registra los componentes de la cinta.
-   Las hojas de estilo se enlazan desde index.html a propósito, para que la
-   página se vea bien aunque este script falle. */
-import './componentes/am-cinta.js';
-import './componentes/am-tramo.js';
-import './componentes/am-cotizador.js';
+/* Entry point: registers the tape components.
+   Stylesheets are linked from index.html on purpose, so the page looks
+   right even if this script fails. */
+import './components/am-tape.js';
+import './components/am-segment.js';
+import './components/am-quoter.js';
 
-const componentes = ['am-cinta', 'am-tramo', 'am-cotizador'];
-const listos = Promise.all(componentes.map((n) => customElements.whenDefined(n)));
+const components = ['am-tape', 'am-segment', 'am-quoter'];
+const ready = Promise.all(components.map((n) => customElements.whenDefined(n)));
 
-const AIRE = 24;
+const MARGIN = 24;
 
-/* Mueve la página, no el elemento.
-   Un salto de ancla normal busca el ancestro con scroll y se topa con la
-   columna de cinta, que lleva `overflow: hidden` y no se mueve. */
-function bajarA(destino, suave) {
-    const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* Moves the page, not the element.
+   A regular anchor jump looks for the scrolling ancestor and runs into the
+   tape column, which has `overflow: hidden` and doesn't move. */
+function scrollToElement(target, smooth) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({
-        top: Math.max(0, window.scrollY + destino.getBoundingClientRect().top - AIRE),
-        behavior: suave && !quieto ? 'smooth' : 'instant',
+        top: Math.max(0, window.scrollY + target.getBoundingClientRect().top - MARGIN),
+        behavior: smooth && !reducedMotion ? 'smooth' : 'instant',
     });
 }
 
-/* El botón Cotizar de la portada */
-document.addEventListener('click', (evento) => {
-    const enlace = evento.target.closest?.('a[href^="#"]');
-    if (!enlace) return;
-    const destino = document.querySelector(enlace.getAttribute('href'));
-    if (!destino) return;
-    evento.preventDefault();
-    bajarA(destino, true);
+/* The cover's Quote button */
+document.addEventListener('click', (event) => {
+    const link = event.target.closest?.('a[href^="#"]');
+    if (!link) return;
+    const target = document.querySelector(link.getAttribute('href'));
+    if (!target) return;
+    event.preventDefault();
+    scrollToElement(target, true);
 });
 
-/* Al entrar con ancla, el navegador salta antes de que los componentes se
-   monten y midan, así que aterriza en el sitio equivocado. Se repite el salto
-   cuando la cinta ya tiene su alto definitivo. */
-listos.then(() => {
+/* When arriving with an anchor, the browser jumps before the components
+   mount and measure, so it lands in the wrong place. The jump is repeated
+   once the tape has its final height. */
+ready.then(() => {
     if (!window.location.hash) return;
-    const destino = document.querySelector(window.location.hash);
-    if (destino) bajarA(destino, false);
+    const target = document.querySelector(window.location.hash);
+    if (target) scrollToElement(target, false);
 });

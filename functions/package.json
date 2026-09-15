@@ -1,6 +1,6 @@
 {
-  "name": "amedida-funciones",
-  "description": "API del cotizador: catálogo y precio aproximado",
+  "name": "amedida-functions",
+  "description": "Quoter API: catalog and approximate price",
   "private": true,
   "type": "module",
   "main": "index.js",

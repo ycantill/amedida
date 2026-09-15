@@ -1,7 +1,7 @@
 {
   "name": "amedida-web",
   "version": "1.0.0",
-  "description": "Sitio de A MEDIDA Confecciones",
+  "description": "A MEDIDA Confecciones website",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,24 +1,24 @@
 /* ==========================================================================
-   A MEDIDA Confecciones - Contenido
-   Estas reglas visten lo que vive en index.html y lo que los componentes
-   dibujan en el DOM de la página. Se queda en hoja global a propósito: así
-   el texto y los enlaces siguen en el HTML y se leen aunque el script falle.
+   A MEDIDA Confecciones - Content
+   These rules style what lives in index.html and what the components
+   render into the page DOM. It stays a global stylesheet on purpose: that
+   way text and links remain in the HTML and are readable even if the script fails.
    ========================================================================== */
 
 /* ==========================================================================
-   1. MARCA Y PORTADA
+   1. BRAND AND COVER
    ========================================================================== */
-.marca {
+.brand {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
 }
 
-.marca__nombre {
+.brand__name {
     display: flex;
     align-items: baseline;
-    font-family: var(--fuente-marca);
+    font-family: var(--font-brand);
     font-weight: 700;
     font-size: clamp(40px, 7.5vh, 50px);
     line-height: 1;
@@ -27,40 +27,40 @@
     user-select: none;
 }
 
-.marca__a { color: var(--cinta-acento); }
-.marca__medida { color: var(--cinta-texto); }
+.brand__a { color: var(--tape-accent); }
+.brand__measure { color: var(--tape-text); }
 
-.marca__descriptor {
-    font-family: var(--fuente-marca);
+.brand__descriptor {
+    font-family: var(--font-brand);
     font-weight: 400;
     font-size: 13px;
     letter-spacing: 0.4em;
     text-indent: 0.4em;
     text-transform: uppercase;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
 }
 
-.filete {
-    /* Un filete de 1 px se lo come cualquier columna apretada */
+.rule {
+    /* A 1 px rule gets squeezed out by any tight column */
     flex: none;
     width: 88px;
     height: 1px;
-    background: var(--cinta-filete);
+    background: var(--tape-rule);
 }
 
-.lema {
-    font-family: var(--fuente-marca);
+.tagline {
+    font-family: var(--font-brand);
     font-weight: 700;
     font-size: clamp(23px, 4vh, 27px);
     line-height: 1.3;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
     text-wrap: pretty;
 }
 
 /* ==========================================================================
-   2. CONTACTO
+   2. CONTACT
    ========================================================================== */
-.contacto {
+.contact {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -69,225 +69,225 @@
     min-width: 0;
 }
 
-.contacto__item {
+.contact__item {
     display: inline-flex;
     align-items: center;
     gap: 11px;
     max-width: 100%;
     min-width: 0;
-    font-family: var(--fuente-texto);
+    font-family: var(--font-text);
     font-weight: 500;
     font-size: 16px;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
     text-decoration: none;
-    transition: var(--transicion);
+    transition: var(--transition);
 }
 
-.contacto__item--correo { font-size: 15px; }
+.contact__item--email { font-size: 15px; }
 
-.contacto__item span {
+.contact__item span {
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-.contacto__item:hover,
-.contacto__item:focus-visible { color: var(--cinta-texto-fuerte); }
+.contact__item:hover,
+.contact__item:focus-visible { color: var(--tape-text-strong); }
 
-.contacto__icono {
+.contact__icon {
     flex: none;
-    color: var(--cinta-acento);
+    color: var(--tape-accent);
 }
 
-.horario {
-    font-family: var(--fuente-mono);
+.hours {
+    font-family: var(--font-mono);
     font-size: 10px;
     line-height: 1.9;
     letter-spacing: 0.06em;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
     text-wrap: pretty;
 }
 
 /* ==========================================================================
-   3. BOTONES
-   Un solo objeto con tres pesos: lleno, con marco de oro y tenue.
+   3. BUTTONS
+   A single object with three weights: filled, gold outline and subtle.
    ========================================================================== */
-.acciones {
+.actions {
     display: flex;
     gap: 12px;
     width: 100%;
 }
 
-.acciones > * { flex: 1; }
+.actions > * { flex: 1; }
 
-.boton {
+.button {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     min-height: 54px;
     padding: 0 18px;
-    border: 1px solid var(--cinta-acento);
+    border: 1px solid var(--tape-accent);
     background: none;
     cursor: pointer;
-    font-family: var(--fuente-texto);
+    font-family: var(--font-text);
     font-weight: 600;
     font-size: 13px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
     text-decoration: none;
     text-align: center;
-    transition: var(--transicion);
+    transition: var(--transition);
 }
 
-.boton:hover,
-.boton:focus-visible { background: rgba(168, 130, 58, 0.14); }
+.button:hover,
+.button:focus-visible { background: rgba(168, 130, 58, 0.14); }
 
-.boton--lleno {
-    background: var(--cinta-acento);
-    border-color: var(--cinta-acento);
-    color: var(--cinta-acento-texto);
+.button--filled {
+    background: var(--tape-accent);
+    border-color: var(--tape-accent);
+    color: var(--tape-accent-text);
 }
 
-.boton--lleno:hover,
-.boton--lleno:focus-visible {
-    background: var(--cinta-acento-vivo);
-    border-color: var(--cinta-acento-vivo);
+.button--filled:hover,
+.button--filled:focus-visible {
+    background: var(--tape-accent-bright);
+    border-color: var(--tape-accent-bright);
 }
 
-.boton--tenue {
-    border-color: var(--cinta-filete);
-    color: var(--cinta-descriptor);
+.button--subtle {
+    border-color: var(--tape-rule);
+    color: var(--tape-descriptor);
 }
 
-.boton--tenue:hover,
-.boton--tenue:focus-visible {
+.button--subtle:hover,
+.button--subtle:focus-visible {
     background: none;
-    border-color: var(--cinta-acento);
-    color: var(--cinta-texto);
+    border-color: var(--tape-accent);
+    color: var(--tape-text);
 }
 
-.boton--corto { min-height: 46px; font-size: 12px; }
+.button--short { min-height: 46px; font-size: 12px; }
 
-.boton--inerte {
-    border-color: var(--cinta-filete);
-    color: var(--cinta-apagado);
+.button--inert {
+    border-color: var(--tape-rule);
+    color: var(--tape-muted);
     cursor: not-allowed;
 }
 
-.boton--inerte:hover { background: none; }
+.button--inert:hover { background: none; }
 
-/* La acción de la portada, más baja que las del cotizador */
-.acciones .boton { min-height: 52px; }
+/* The cover action, shorter than the quoter's */
+.actions .button { min-height: 52px; }
 
 /* ==========================================================================
-   4. ESTRUCTURA DEL COTIZADOR
+   4. QUOTER STRUCTURE
    ========================================================================== */
-am-cotizador {
+am-quoter {
     display: flex;
     flex-direction: column;
     gap: 32px;
 }
 
-.bloque {
+.block {
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.paso {
+.step {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.paso__numero,
-.paso__nombre {
-    font-family: var(--fuente-mono);
+.step__number,
+.step__name {
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
 }
 
-.paso__numero { color: var(--cinta-acento); }
-.paso__nombre { color: var(--cinta-descriptor); }
+.step__number { color: var(--tape-accent); }
+.step__name { color: var(--tape-descriptor); }
 
-.paso__regla {
+.step__ruler {
     flex: 1;
     height: 2px;
-    background-image: repeating-linear-gradient(90deg, var(--cinta-filete) 0 2px, transparent 2px 8px);
+    background-image: repeating-linear-gradient(90deg, var(--tape-rule) 0 2px, transparent 2px 8px);
     background-repeat: repeat-x;
 }
 
-/* Puntada: el filete discontinuo que separa bloques */
-.puntada {
+/* Stitch: the dashed rule that separates blocks */
+.stitch {
     display: block;
     height: 1px;
-    background-image: repeating-linear-gradient(90deg, var(--cinta-filete) 0 2px, transparent 2px 8px);
+    background-image: repeating-linear-gradient(90deg, var(--tape-rule) 0 2px, transparent 2px 8px);
     background-repeat: repeat-x;
 }
 
-.puntada--corta { width: 70px; }
+.stitch--short { width: 70px; }
 
-.titulo {
-    font-family: var(--fuente-marca);
+.title {
+    font-family: var(--font-brand);
     font-weight: 700;
     font-size: 24px;
     line-height: 1.3;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
     text-wrap: pretty;
 }
 
-.entrada {
-    font-family: var(--fuente-texto);
+.lead {
+    font-family: var(--font-text);
     font-size: 15px;
     line-height: 1.6;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
     text-wrap: pretty;
 }
 
-.rotulo {
-    font-family: var(--fuente-mono);
+.label {
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
 }
 
-.rotulo--acento { color: var(--cinta-acento); letter-spacing: 0.18em; }
+.label--accent { color: var(--tape-accent); letter-spacing: 0.18em; }
 
-.nota {
-    font-family: var(--fuente-texto);
+.note {
+    font-family: var(--font-text);
     font-size: 13px;
     line-height: 1.6;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
     text-wrap: pretty;
 }
 
-.nota--marcada {
-    border-left: 2px solid var(--cinta-acento);
+.note--flagged {
+    border-left: 2px solid var(--tape-accent);
     padding: 2px 0 2px 14px;
 }
 
-.resumen {
-    font-family: var(--fuente-texto);
+.summary {
+    font-family: var(--font-text);
     font-size: 14px;
     line-height: 1.6;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
     text-wrap: pretty;
 }
 
 /* ==========================================================================
-   5. CATÁLOGO DE PRENDAS
-   Tarjetas de dos columnas con el dibujo de cada prenda
+   5. GARMENT CATALOG
+   Two-column cards with a drawing of each garment
    ========================================================================== */
-.catalogo {
+.catalog {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
 
-.prenda-tarjeta {
+.garment-card {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -295,106 +295,106 @@ am-cotizador {
     gap: 12px;
     min-height: 132px;
     padding: 18px 10px;
-    border: 1px solid var(--cinta-filete);
+    border: 1px solid var(--tape-rule);
     background: none;
     cursor: pointer;
     text-align: center;
-    color: var(--cinta-descriptor);
-    transition: var(--transicion);
+    color: var(--tape-descriptor);
+    transition: var(--transition);
 }
 
-.prenda-tarjeta:hover {
-    border-color: var(--cinta-acento);
-    color: var(--cinta-texto);
+.garment-card:hover {
+    border-color: var(--tape-accent);
+    color: var(--tape-text);
 }
 
-.prenda-tarjeta--activa {
+.garment-card--active {
     background: rgba(168, 130, 58, 0.16);
-    border-color: var(--cinta-acento);
-    color: var(--cinta-texto-fuerte);
+    border-color: var(--tape-accent);
+    color: var(--tape-text-strong);
 }
 
-/* El dibujo se tiñe con el color de la tarjeta */
-.prenda-tarjeta__dibujo {
+/* The drawing takes the card's color */
+.garment-card__drawing {
     flex: none;
 }
 
-.prenda-tarjeta__nombre {
-    font-family: var(--fuente-texto);
+.garment-card__name {
+    font-family: var(--font-text);
     font-weight: 500;
     font-size: 14px;
     letter-spacing: 0.01em;
 }
 
 /* ==========================================================================
-   6. FICHA: el interruptor del bordado
+   6. CHIP: the embroidery toggle
    ========================================================================== */
-.fichas {
+.chips {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.ficha {
+.chip {
     min-height: 44px;
     padding: 0 16px;
-    border: 1px solid var(--cinta-filete);
+    border: 1px solid var(--tape-rule);
     background: none;
     cursor: pointer;
-    font-family: var(--fuente-texto);
+    font-family: var(--font-text);
     font-weight: 500;
     font-size: 14px;
     letter-spacing: 0.01em;
-    color: var(--cinta-descriptor);
-    transition: var(--transicion);
+    color: var(--tape-descriptor);
+    transition: var(--transition);
 }
 
-.ficha:hover { border-color: var(--cinta-acento); color: var(--cinta-texto); }
+.chip:hover { border-color: var(--tape-accent); color: var(--tape-text); }
 
-.ficha--activa {
+.chip--active {
     background: rgba(168, 130, 58, 0.2);
-    border-color: var(--cinta-acento);
-    color: var(--cinta-texto-fuerte);
+    border-color: var(--tape-accent);
+    color: var(--tape-text-strong);
 }
 
 /* ==========================================================================
-   7. CAMPOS
+   7. FIELDS
    ========================================================================== */
-.campo {
+.field {
     display: flex;
     flex-direction: column;
     gap: 9px;
     min-width: 0;
 }
 
-.campo__etiqueta {
-    font-family: var(--fuente-mono);
+.field__label {
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
 }
 
-/* El control es un renglón de cuaderno: solo el filete de abajo */
-.campo__control {
+/* The control is a notebook line: only the bottom rule */
+.field__control {
     width: 100%;
     min-height: 44px;
     padding: 0 0 11px;
     border: 0;
-    border-bottom: 1px solid var(--cinta-filete);
+    border-bottom: 1px solid var(--tape-rule);
     border-radius: 0;
     background: none;
-    font-family: var(--fuente-texto);
+    font-family: var(--font-text);
     font-size: 17px;
-    color: var(--cinta-texto-fuerte);
-    transition: var(--transicion);
+    color: var(--tape-text-strong);
+    transition: var(--transition);
 }
 
-.campo__control::placeholder { color: var(--azul-marcador); }
-.campo__control:hover { border-bottom-color: var(--cinta-descriptor); }
-.campo__control:focus { outline: none; border-bottom-color: var(--cinta-acento); }
+.field__control::placeholder { color: var(--blue-placeholder); }
+.field__control:hover { border-bottom-color: var(--tape-descriptor); }
+.field__control:focus { outline: none; border-bottom-color: var(--tape-accent); }
 
-.campo__control--lista {
+.field__control--select {
     appearance: none;
     padding-right: 24px;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'><path d='M5 9l7 7 7-7' stroke='%23a8823a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
@@ -402,192 +402,192 @@ am-cotizador {
     background-position: right 2px center;
 }
 
-.campo__control--lista option {
-    color: var(--azul);
-    background: var(--crema);
+.field__control--select option {
+    color: var(--blue);
+    background: var(--cream);
 }
 
 /* ==========================================================================
-   8. TARJETA DE PRENDA Y TALLAS
+   8. GARMENT CARD AND SIZES
    ========================================================================== */
-.prendas {
+.garments {
     display: flex;
     flex-direction: column;
     gap: 26px;
 }
 
-.prenda {
+.garment {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    border: 1px solid var(--cinta-filete);
+    border: 1px solid var(--tape-rule);
     padding: 20px;
 }
 
-.prenda__cabeza {
+.garment__header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
 }
 
-.prenda__nombre {
-    font-family: var(--fuente-marca);
+.garment__name {
+    font-family: var(--font-brand);
     font-weight: 700;
     font-size: 20px;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
 }
 
-.prenda__total {
-    font-family: var(--fuente-mono);
+.garment__total {
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.1em;
-    color: var(--cinta-acento);
+    color: var(--tape-accent);
     white-space: nowrap;
 }
 
-.tallas {
+.sizes {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.talla {
+.size {
     width: 74px;
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.talla__rotulo {
-    font-family: var(--fuente-mono);
+.size__label {
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
     text-align: center;
 }
 
-.talla__control {
+.size__control {
     width: 100%;
     min-height: 46px;
     padding: 0;
-    border: 1px solid var(--cinta-filete);
+    border: 1px solid var(--tape-rule);
     border-radius: 0;
     background: none;
-    font-family: var(--fuente-texto);
+    font-family: var(--font-text);
     font-size: 16px;
-    color: var(--cinta-texto-fuerte);
+    color: var(--tape-text-strong);
     text-align: center;
-    transition: var(--transicion);
+    transition: var(--transition);
 }
 
-.talla__control::placeholder { color: var(--azul-marcador); }
-.talla__control:focus { outline: none; border-color: var(--cinta-acento); }
+.size__control::placeholder { color: var(--blue-placeholder); }
+.size__control:focus { outline: none; border-color: var(--tape-accent); }
 
-.talla__control--puesta {
+.size__control--filled {
     background: rgba(168, 130, 58, 0.16);
-    border-color: var(--cinta-acento);
+    border-color: var(--tape-accent);
 }
 
-.prenda__extra {
+.garment__extra {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
 }
 
-.prenda__tarifa {
-    font-family: var(--fuente-mono);
+.garment__rate {
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.08em;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
 }
 
 /* ==========================================================================
-   9. PRECIO
+   9. PRICE
    ========================================================================== */
-.precio {
+.price {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    border: 1px solid var(--cinta-acento);
+    border: 1px solid var(--tape-accent);
     padding: 22px;
 }
 
-.precio__lineas {
+.price__lines {
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.precio__fila {
+.price__row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 14px;
 }
 
-.precio__prenda {
+.price__garment {
     display: flex;
     flex-direction: column;
     gap: 3px;
     min-width: 0;
 }
 
-.precio__nombre {
-    font-family: var(--fuente-texto);
+.price__name {
+    font-family: var(--font-text);
     font-weight: 500;
     font-size: 15px;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
 }
 
-.precio__detalle,
-.precio__tallas {
-    font-family: var(--fuente-mono);
+.price__detail,
+.price__sizes {
+    font-family: var(--font-mono);
     letter-spacing: 0.04em;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
     font-variant-numeric: tabular-nums;
 }
 
-.precio__detalle { font-size: 11px; }
-.precio__tallas { font-size: 10px; }
+.price__detail { font-size: 11px; }
+.price__sizes { font-size: 10px; }
 
-.precio__valor {
-    font-family: var(--fuente-mono);
+.price__value {
+    font-family: var(--font-mono);
     font-size: 14px;
-    color: var(--cinta-texto-fuerte);
+    color: var(--tape-text-strong);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
 
-.precio__total {
+.price__total {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 14px;
 }
 
-.precio__total-rotulo {
-    font-family: var(--fuente-marca);
+.price__total-label {
+    font-family: var(--font-brand);
     font-weight: 700;
     font-size: 19px;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
 }
 
-.precio__total-valor {
-    font-family: var(--fuente-marca);
+.price__total-value {
+    font-family: var(--font-brand);
     font-weight: 700;
     font-size: 26px;
-    color: var(--cinta-acento);
+    color: var(--tape-accent);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
 
 /* ==========================================================================
-   10. DESPEDIDA
+   10. FAREWELL
    ========================================================================== */
-.despedida {
+.farewell {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -596,46 +596,46 @@ am-cotizador {
     text-align: center;
 }
 
-.despedida__frase {
-    font-family: var(--fuente-marca);
+.farewell__phrase {
+    font-family: var(--font-brand);
     font-weight: 400;
     font-size: 18px;
     line-height: 1.5;
-    color: var(--cinta-texto);
+    color: var(--tape-text);
     text-wrap: pretty;
 }
 
-.despedida__pie {
-    font-family: var(--fuente-texto);
+.farewell__footer {
+    font-family: var(--font-text);
     font-size: 14px;
     line-height: 1.6;
-    color: var(--cinta-descriptor);
+    color: var(--tape-descriptor);
     text-wrap: pretty;
 }
 
-/* Foco visible coherente con el sistema */
+/* Visible focus consistent with the system */
 a:focus-visible,
 button:focus-visible {
-    outline: 2px solid var(--cinta-acento);
+    outline: 2px solid var(--tape-accent);
     outline-offset: 3px;
 }
 
 /* ==========================================================================
-   11. PANTALLAS ANGOSTAS
+   11. NARROW SCREENS
    ========================================================================== */
 @media (max-width: 400px) {
-    .talla { width: calc(33.333% - 7px); }
-    .acciones { flex-direction: column; }
-    .contacto__item { font-size: 15px; }
-    .contacto__item--correo { font-size: 14px; }
+    .size { width: calc(33.333% - 7px); }
+    .actions { flex-direction: column; }
+    .contact__item { font-size: 15px; }
+    .contact__item--email { font-size: 14px; }
 }
 
 /* ==========================================================================
-   12. BARRA FLOTANTE
-   Aparece abajo cuando lo que toca hacer a continuación quedó fuera de la
-   pantalla. Se desvanece sobre el campo de la cinta para no cortar en seco.
+   12. FLOATING BAR
+   Appears at the bottom when the next thing to do has scrolled off
+   screen. It fades over the tape field so it doesn't cut off abruptly.
    ========================================================================== */
-.flotante {
+.floating {
     position: fixed;
     left: 0;
     right: 0;
@@ -643,24 +643,24 @@ button:focus-visible {
     z-index: 5;
     display: flex;
     justify-content: center;
-    /* Solo el botón recibe toques: el resto deja pasar el scroll */
+    /* Only the button receives taps: the rest lets scrolling through */
     pointer-events: none;
 }
 
-.flotante__caja {
+.floating__box {
     width: 100%;
-    max-width: var(--columna);
-    padding: 14px var(--aire-lateral) 18px;
+    max-width: var(--column);
+    padding: 14px var(--side-gutter) 18px;
     background: linear-gradient(
         180deg,
         rgba(30, 42, 68, 0) 0%,
         rgba(30, 42, 68, 0.92) 34%,
-        var(--cinta-campo) 100%
+        var(--tape-field) 100%
     );
     pointer-events: auto;
 }
 
-.flotante .boton {
+.floating .button {
     width: 100%;
     box-shadow: 0 10px 30px rgba(22, 32, 47, 0.45);
 }

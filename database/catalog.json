@@ -1,0 +1,24 @@
+{
+  "garments": {
+    "shirt": { "name": "Camisa", "sortOrder": 1, "rate": 38000 },
+    "blouse": { "name": "Blusa", "sortOrder": 2, "rate": 40000 },
+    "polo": { "name": "Camiseta polo", "sortOrder": 3, "rate": 32000 },
+    "trousers": { "name": "Pantalón", "sortOrder": 4, "rate": 52000 },
+    "skirt": { "name": "Falda", "sortOrder": 5, "rate": 45000 },
+    "sweatshirt": { "name": "Sudadera", "sortOrder": 6, "rate": 68000 },
+    "jacket": { "name": "Chaqueta", "sortOrder": 7, "rate": 85000 },
+    "vest": { "name": "Chaleco", "sortOrder": 8, "rate": 42000 },
+    "coat": { "name": "Bata", "sortOrder": 9, "rate": 58000 },
+    "tunic": { "name": "Filipina", "sortOrder": 10, "rate": 55000 },
+    "apron": { "name": "Delantal", "sortOrder": 11, "rate": 28000 },
+    "overalls": { "name": "Overol", "sortOrder": 12, "rate": 92000 }
+  },
+  "sizes": ["XS", "S", "M", "L", "XL"],
+  "types": ["Escolar", "Empresarial", "Salud", "Otro"],
+  "embroidery": 6000,
+  "tiers": [
+    { "from": 200, "discount": 0.18 },
+    { "from": 100, "discount": 0.12 },
+    { "from": 50, "discount": 0.08 }
+  ]
+}
