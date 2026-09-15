@@ -39,10 +39,52 @@ o calcular el precio. Se sabe con un observador de intersección sobre cada uno
 de esos tres elementos, así la página no se mueve bajo los dedos de quien está
 tocando tarjetas.
 
-Las tarifas, el catálogo, las tallas y los tramos de descuento por volumen
-viven en `src/catalogo.js`. Cambiar un precio es cambiarlo ahí y en ningún
-otro lado. Los dibujos de las prendas están en
-`src/componentes/iconos-prenda.js`.
+El catálogo y el precio vienen de la API (ver abajo). Los dibujos de las
+prendas están en `src/componentes/iconos-prenda.js`, con la misma clave que
+cada prenda tiene en la base.
+
+## La API
+
+Dos Cloud Functions en `functions/`, que leen la Realtime Database
+(`amedida-b6831-default-rtdb`) bajo `/catalogo`:
+
+- `GET /catalogo` — prendas (`id`, `nombre`), tallas, tipos de dotación y
+  precio del bordado. No incluye tarifas ni tramos de descuento.
+- `POST /cotizar` — recibe
+  `{ "tipo": "Salud", "lineas": [{ "prenda": "camisa", "tallas": { "M": 10 }, "bordado": true }] }`
+  y devuelve `detalle`, `unidades`, `descuento` y `total`. Responde 400 si el
+  pedido trae prendas, tallas o cantidades que no existen.
+
+Las reglas de la base (`database.rules.json`) cierran lectura y escritura:
+solo las funciones entran, con el Admin SDK. Las reglas del cálculo están en
+`functions/cotizacion.js` y se prueban con `npm test` dentro de `functions/`.
+
+Cambiar un precio, una prenda o un tramo es editar `database/catalogo.json` y
+subirlo:
+
+```
+firebase database:set /catalogo database/catalogo.json
+```
+
+Una prenda nueva necesita además su dibujo en `iconos-prenda.js`.
+
+Publicar las funciones y las reglas (requiere el plan Blaze):
+
+```
+firebase deploy --only functions,database
+```
+
+Para trabajar en local contra los emuladores:
+
+```
+firebase emulators:start --only functions,database
+FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 firebase database:set /catalogo database/catalogo.json
+echo "VITE_API=http://127.0.0.1:5001/amedida-b6831/us-central1" > .env.local
+npm run dev
+```
+
+El sitio toma la dirección de la API de `VITE_API` (`.env` apunta a
+producción).
 
 ## Estructura
 
@@ -50,7 +92,10 @@ otro lado. Los dibujos de las prendas están en
   Única hoja donde se cambia la identidad.
 - `src/estilos/contenido.css` — viste lo que vive en `index.html`.
 - `src/componentes/` — la cinta, el tramo y el cotizador.
-- `src/catalogo.js` — prendas, tarifas, tallas y descuentos.
+- `src/catalogo.js` — formato de precios.
+- `src/api.js` — cliente de la API.
+- `functions/` — la API del cotizador.
+- `database/catalogo.json` — prendas, tarifas, tallas y descuentos que van a la base.
 - `public/` — lo que se copia tal cual: CNAME y favicon.
 
 El texto y los enlaces se quedan en `index.html`, fuera de los componentes,

@@ -1,10 +1,8 @@
 import { LitElement, html, nothing } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
-import {
-    CATALOGO, TARIFAS, TARIFA_POR_DEFECTO, ESCALA, BORDADO, TIPOS,
-    idDe, descuentoPorVolumen, moneda,
-} from '../catalogo.js';
+import { moneda } from '../catalogo.js';
+import { traerCatalogo, cotizar } from '../api.js';
 import { ICONOS } from './iconos-prenda.js';
 
 const WHATSAPP = '573000000000';
@@ -14,6 +12,11 @@ const LINEA_VACIA = { tallas: {}, bordado: false, nota: '' };
 
 /* Aire que se deja al traer algo a la vista, para que no quede pegado al borde */
 const AIRE = 24;
+
+/* Un respiro mínimo antes de mostrar el precio: si la API responde muy
+   rápido, el precio aparece de golpe y no se lee como una respuesta */
+const RESPIRO = 900;
+const esperar = (ms) => new Promise((listo) => setTimeout(listo, ms));
 
 /**
  * El cotizador, en dos pasos que se van revelando.
@@ -25,11 +28,14 @@ const AIRE = 24;
  * quedó fuera de la pantalla. Así el recorrido no se interrumpe sin mover la
  * página bajo los dedos de quien está tocando tarjetas.
  *
- * El precio que muestra es de referencia. Sale de las tarifas del documento
- * de diseño y del descuento por volumen, y así se dice en pantalla.
+ * El catálogo y el precio vienen de la API (functions/). El precio es de
+ * referencia, y así se dice en pantalla.
  */
 export class AmCotizador extends LitElement {
     static properties = {
+        catalogo: { state: true },
+        fallaCatalogo: { state: true },
+        fallaPrecio: { state: true },
         paso: { state: true },
         tipo: { state: true },
         seleccion: { state: true },
@@ -49,10 +55,15 @@ export class AmCotizador extends LitElement {
 
     constructor() {
         super();
-        this.temporizador = null;
+        /* Cada cálculo lleva un número de vuelta. Si el formulario cambia
+           mientras la API responde, la respuesta llega vieja y se descarta. */
+        this.vuelta = 0;
         this.vigias = new Map();
+        this.catalogo = null;
+        this.fallaCatalogo = false;
+        this.fallaPrecio = false;
         this.paso = 1;
-        this.tipo = TIPOS[0];
+        this.tipo = '';
         this.seleccion = [];
         this.lineas = {};
         this.estimado = null;
@@ -64,14 +75,35 @@ export class AmCotizador extends LitElement {
         this.siguienteALaVista = true;
     }
 
+    connectedCallback() {
+        super.connectedCallback();
+        if (!this.catalogo) this.cargarCatalogo();
+    }
+
     disconnectedCallback() {
         super.disconnectedCallback();
-        clearTimeout(this.temporizador);
+        this.vuelta += 1;
         this.vigias.forEach((vigia) => vigia.observador.disconnect());
         this.vigias.clear();
     }
 
     /* ---------- Lectura ---------- */
+
+    async cargarCatalogo() {
+        this.fallaCatalogo = false;
+        try {
+            this.catalogo = await traerCatalogo();
+            this.tipo = this.catalogo.tipos[0] ?? '';
+        } catch (error) {
+            console.error(error);
+            this.fallaCatalogo = true;
+        }
+    }
+
+    /* El identificador sirve para nombrar elementos y poder volver a ellos */
+    idDe(nombre) {
+        return this.catalogo?.prendas.find((prenda) => prenda.nombre === nombre)?.id ?? '';
+    }
 
     linea(prenda) {
         return this.lineas[prenda] ?? LINEA_VACIA;
@@ -82,9 +114,8 @@ export class AmCotizador extends LitElement {
             .reduce((suma, cantidad) => suma + (parseInt(cantidad, 10) || 0), 0);
     }
 
-    detalleTallas(prenda) {
-        const tallas = this.linea(prenda).tallas;
-        return ESCALA
+    detalleTallas(tallas) {
+        return this.catalogo.tallas
             .filter((talla) => (parseInt(tallas[talla], 10) || 0) > 0)
             .map((talla) => `${tallas[talla]} de talla ${talla}`)
             .join(', ');
@@ -107,7 +138,10 @@ export class AmCotizador extends LitElement {
     /* Cualquier cambio invalida el estimado: no puede quedar en pantalla un
        precio que ya no corresponde a lo que dice el formulario */
     olvidarEstimado() {
+        this.vuelta += 1;
+        this.calculando = false;
         this.estimado = null;
+        this.fallaPrecio = false;
     }
 
     alternarPrenda(prenda) {
@@ -166,7 +200,7 @@ export class AmCotizador extends LitElement {
             continuar: ['#continuar', 'continuarALaVista'],
             calcular: ['#calcular', 'calcularALaVista'],
             siguiente: [
-                this.siguientePendiente ? `#linea-${idDe(this.siguientePendiente)}` : null,
+                this.siguientePendiente ? `#linea-${this.idDe(this.siguientePendiente)}` : null,
                 'siguienteALaVista',
             ],
         };
@@ -200,7 +234,7 @@ export class AmCotizador extends LitElement {
         if (siguiente && !this.siguienteALaVista) {
             return {
                 texto: `Siguiente: ${siguiente}`,
-                accion: () => this.bajarA(`#linea-${idDe(siguiente)}`),
+                accion: () => this.bajarA(`#linea-${this.idDe(siguiente)}`),
             };
         }
 
@@ -222,43 +256,56 @@ export class AmCotizador extends LitElement {
 
     /* ---------- Cálculo ---------- */
 
-    calcular() {
+    get pedido() {
+        return {
+            tipo: this.tipo,
+            lineas: this.seleccion
+                .filter((prenda) => this.unidades(prenda) > 0)
+                .map((prenda) => {
+                    const { tallas, bordado } = this.linea(prenda);
+                    return {
+                        prenda: this.idDe(prenda),
+                        bordado,
+                        tallas: Object.fromEntries(Object.entries(tallas)
+                            .map(([talla, cantidad]) => [talla, parseInt(cantidad, 10)])),
+                    };
+                }),
+        };
+    }
+
+    async calcular() {
         if (!this.puedeCalcular || this.calculando) return;
+        const vuelta = ++this.vuelta;
         this.calculando = true;
         this.estimado = null;
+        this.fallaPrecio = false;
 
-        /* Un respiro corto: el cálculo es instantáneo, pero sin él el precio
-           aparece de golpe y no se lee como una respuesta */
-        this.temporizador = setTimeout(async () => {
-            const conUnidades = this.seleccion
-                .map((prenda) => ({ prenda, cantidad: this.unidades(prenda) }))
-                .filter((l) => l.cantidad > 0);
+        let respuesta = null;
+        try {
+            [respuesta] = await Promise.all([cotizar(this.pedido), esperar(RESPIRO)]);
+        } catch (error) {
+            console.error(error);
+        }
 
-            const unidades = conUnidades.reduce((suma, l) => suma + l.cantidad, 0);
-            const descuento = descuentoPorVolumen(unidades);
+        if (vuelta !== this.vuelta) return;
+        this.calculando = false;
 
-            const detalle = conUnidades.map(({ prenda, cantidad }) => {
-                const { bordado } = this.linea(prenda);
-                const base = Math.round((TARIFAS[prenda] ?? TARIFA_POR_DEFECTO) * (1 - descuento));
-                const unitario = base + (bordado ? BORDADO : 0);
-                return {
-                    prenda, cantidad, unitario, bordado,
-                    tallas: this.detalleTallas(prenda),
-                    subtotal: unitario * cantidad,
-                };
-            });
+        if (!respuesta) {
+            this.fallaPrecio = true;
+            return;
+        }
 
-            this.calculando = false;
-            this.estimado = {
-                detalle,
-                unidades,
-                descuento,
-                total: detalle.reduce((suma, l) => suma + l.subtotal, 0),
-            };
+        this.estimado = {
+            ...respuesta,
+            detalle: respuesta.detalle.map((fila) => ({
+                ...fila,
+                prenda: fila.nombre,
+                tallas: this.detalleTallas(fila.tallas),
+            })),
+        };
 
-            await this.updateComplete;
-            this.bajarA('#precio');
-        }, 900);
+        await this.updateComplete;
+        this.bajarA('#precio');
     }
 
     /* ---------- Mensaje ---------- */
@@ -272,7 +319,7 @@ export class AmCotizador extends LitElement {
             const partes = [];
             const cantidad = this.unidades(prenda);
             if (cantidad) partes.push(`${cantidad} unidades`);
-            const tallas = this.detalleTallas(prenda);
+            const tallas = this.detalleTallas(this.linea(prenda).tallas);
             if (tallas) partes.push(tallas);
             if (bordado) partes.push('con bordado del logo');
             if (nota.trim()) partes.push(nota.trim());
@@ -340,7 +387,7 @@ export class AmCotizador extends LitElement {
             </div>
 
             <div class="catalogo">
-                ${CATALOGO.map((prenda) => this.tarjetaPrenda(prenda))}
+                ${this.catalogo.prendas.map((prenda) => this.tarjetaPrenda(prenda))}
             </div>
 
             <div class="bloque">
@@ -381,7 +428,7 @@ export class AmCotizador extends LitElement {
         const cantidad = this.unidades(prenda);
 
         return html`
-            <article class="prenda" id="linea-${idDe(prenda)}">
+            <article class="prenda" id="linea-${this.idDe(prenda)}">
                 <header class="prenda__cabeza">
                     <h3 class="prenda__nombre">${prenda}</h3>
                     <span class="prenda__total">
@@ -390,12 +437,12 @@ export class AmCotizador extends LitElement {
                 </header>
 
                 <div class="tallas">
-                    ${ESCALA.map((talla) => html`
+                    ${this.catalogo.tallas.map((talla) => html`
                         <div class="talla">
-                            <label class="talla__rotulo" for="${idDe(prenda)}-${talla}">${talla}</label>
+                            <label class="talla__rotulo" for="${this.idDe(prenda)}-${talla}">${talla}</label>
                             <input
                                 class=${classMap({ talla__control: true, 'talla__control--puesta': Boolean(tallas[talla]) })}
-                                id="${idDe(prenda)}-${talla}"
+                                id="${this.idDe(prenda)}-${talla}"
                                 type="number"
                                 inputmode="numeric"
                                 min="0"
@@ -415,7 +462,7 @@ export class AmCotizador extends LitElement {
                         aria-pressed=${bordado}
                         @click=${() => { this.cambiarLinea(prenda, { bordado: !bordado }); this.olvidarEstimado(); }}
                     >Bordado del logo</button>
-                    <span class="prenda__tarifa">+ ${moneda(BORDADO)} por unidad</span>
+                    <span class="prenda__tarifa">+ ${moneda(this.catalogo.bordado)} por unidad</span>
                 </div>
 
                 <label class="campo">
@@ -487,7 +534,7 @@ export class AmCotizador extends LitElement {
                     .value=${this.tipo}
                     @change=${(e) => { this.tipo = e.target.value; this.olvidarEstimado(); }}
                 >
-                    ${TIPOS.map((t) => html`<option value=${t}>${t}</option>`)}
+                    ${this.catalogo.tipos.map((t) => html`<option value=${t}>${t}</option>`)}
                 </select>
             </label>
 
@@ -508,6 +555,10 @@ export class AmCotizador extends LitElement {
 
                 ${!this.puedeCalcular
                     ? html`<p class="nota">Reparta al menos una unidad por talla para calcular el precio.</p>`
+                    : nothing}
+
+                ${this.fallaPrecio
+                    ? html`<p class="nota nota--marcada">No pudimos calcular el precio. Intente de nuevo en un momento o escríbanos por WhatsApp.</p>`
                     : nothing}
 
                 ${this.estimado ? this.tablaPrecio() : nothing}
@@ -564,7 +615,26 @@ export class AmCotizador extends LitElement {
         `;
     }
 
+    /* Mientras llega el catálogo, o si no llegó */
+    esperandoCatalogo() {
+        return html`
+            ${this.rotuloPaso(1, 'Prendas')}
+
+            <div class="bloque">
+                ${this.fallaCatalogo
+                    ? html`
+                        <p class="nota nota--marcada">No pudimos traer el catálogo de prendas.</p>
+                        <button type="button" class="boton boton--marco" @click=${this.cargarCatalogo}>
+                            Intentar de nuevo
+                        </button>`
+                    : html`<p class="entrada">Cargando el catálogo…</p>`}
+            </div>
+        `;
+    }
+
     render() {
+        if (!this.catalogo) return this.esperandoCatalogo();
+
         return html`
             ${this.pasoPrendas()}
             ${this.paso === 2 ? this.pasoCantidades() : nothing}
