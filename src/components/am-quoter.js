@@ -122,6 +122,14 @@ export class AmQuoter extends LitElement {
             .join(', ');
     }
 
+    /* What the loader says it is measuring: units and garments with units */
+    get measuringSummary() {
+        const filled = this.selection.filter((garment) => this.units(garment) > 0);
+        const units = filled.reduce((sum, garment) => sum + this.units(garment), 0);
+        const garments = filled.length;
+        return `${units} ${units === 1 ? 'unidad' : 'unidades'} en ${garments} ${garments === 1 ? 'prenda' : 'prendas'}`;
+    }
+
     get canCalculate() {
         return this.selection.some((garment) => this.units(garment) > 0);
     }
@@ -280,6 +288,12 @@ export class AmQuoter extends LitElement {
         this.calculating = true;
         this.estimate = null;
         this.priceFailed = false;
+
+        /* The loader takes the place the price will occupy: bring it into
+           view while the API responds */
+        this.updateComplete.then(() => {
+            if (round === this.round) this.scrollToElement('#loader');
+        });
 
         let response = null;
         try {
@@ -481,6 +495,18 @@ export class AmQuoter extends LitElement {
         `;
     }
 
+    /* While the quote service responds: a tape ruler running under a line
+       that says what is being measured */
+    loader() {
+        return html`
+            <section class="loader" id="loader" role="status" aria-live="polite">
+                <span class="label">Calculando</span>
+                <span class="loader__ruler" aria-hidden="true"></span>
+                <p class="loader__text">Estamos midiendo su dotación: ${this.measuringSummary}.</p>
+            </section>
+        `;
+    }
+
     priceTable() {
         const { items, units, discount, total } = this.estimate;
 
@@ -561,6 +587,8 @@ export class AmQuoter extends LitElement {
                 ${this.priceFailed
                     ? html`<p class="note note--flagged">No pudimos calcular el precio. Intente de nuevo en un momento o escríbanos por WhatsApp.</p>`
                     : nothing}
+
+                ${this.calculating ? this.loader() : nothing}
 
                 ${this.estimate ? this.priceTable() : nothing}
             </div>

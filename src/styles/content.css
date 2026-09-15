@@ -505,7 +505,50 @@ am-quoter {
 }
 
 /* ==========================================================================
-   9. PRICE
+   9. LOADER
+   Takes the price's place while the quote service responds
+   ========================================================================== */
+.loader {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    border: 1px solid var(--tape-rule);
+    padding: 22px;
+}
+
+/* A stretch of tape that runs: gold centimetres over millimetre ticks */
+.loader__ruler {
+    display: block;
+    height: 22px;
+    background-image:
+        repeating-linear-gradient(90deg, var(--tape-accent) 0 3px, transparent 3px 36px),
+        repeating-linear-gradient(90deg, var(--tape-rule) 0 2px, transparent 2px 9px);
+    background-size: 100% 22px, 100% 12px;
+    background-position: bottom left, bottom left;
+    background-repeat: repeat-x;
+    animation: tape-run 0.9s linear infinite;
+}
+
+/* One full centimetre step, so the loop has no visible seam */
+@keyframes tape-run {
+    from { background-position-x: 0; }
+    to   { background-position-x: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loader__ruler { animation: none; }
+}
+
+.loader__text {
+    font-family: var(--font-text);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tape-descriptor);
+    text-wrap: pretty;
+}
+
+/* ==========================================================================
+   10. PRICE
    ========================================================================== */
 .price {
     display: flex;
@@ -585,7 +628,7 @@ am-quoter {
 }
 
 /* ==========================================================================
-   10. FAREWELL
+   11. FAREWELL
    ========================================================================== */
 .farewell {
     display: flex;
@@ -621,7 +664,7 @@ button:focus-visible {
 }
 
 /* ==========================================================================
-   11. NARROW SCREENS
+   12. NARROW SCREENS
    ========================================================================== */
 @media (max-width: 400px) {
     .size { width: calc(33.333% - 7px); }
@@ -631,7 +674,7 @@ button:focus-visible {
 }
 
 /* ==========================================================================
-   12. FLOATING BAR
+   13. FLOATING BAR
    Appears at the bottom when the next thing to do has scrolled off
    screen. It fades over the tape field so it doesn't cut off abruptly.
    ========================================================================== */
