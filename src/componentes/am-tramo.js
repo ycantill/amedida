@@ -34,12 +34,14 @@ export class AmTramo extends LitElement {
             padding: 8px var(--aire-lateral) 80px;
         }
 
+        /* La portada se encoge con la altura de la pantalla, para que en un
+           teléfono bajo quepa entera sin recortarse */
         :host([portada]) .contenido {
             align-items: center;
             justify-content: center;
             text-align: center;
-            gap: 40px;
-            padding: 96px var(--aire-lateral) 72px;
+            gap: clamp(20px, 3.6vh, 40px);
+            padding: clamp(48px, 8vh, 96px) var(--aire-lateral) clamp(40px, 7vh, 72px);
         }
 
         @keyframes aparecer {
@@ -49,17 +51,6 @@ export class AmTramo extends LitElement {
 
         @media (prefers-reduced-motion: reduce) {
             :host([portada]) { animation: none; }
-        }
-
-        /* Apaisado bajo: la primera pantalla deja de ser obligatoria */
-        @media (orientation: landscape) and (max-height: 560px) {
-            :host([portada]) {
-                min-height: 0;
-            }
-
-            :host([portada]) .contenido {
-                padding-block: 56px 48px;
-            }
         }
     `;
 
