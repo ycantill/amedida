@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 
-// El sitio se publica en la raíz del dominio propio (amedidaconfecciones.co),
-// así que las rutas van desde "/". Lo que esté en public/ se copia tal cual
-// al resultado: ahí viven el CNAME y los dos favicon.
+// The site is served from the root of the custom domain (amedidaconfecciones.co),
+// so paths start at "/". Whatever is in public/ is copied as-is to the
+// output: that's where the CNAME and both favicons live.
 export default defineConfig({
     base: '/',
     build: {
         outDir: 'dist',
-        assetsDir: 'recursos',
+        assetsDir: 'assets',
     },
 });

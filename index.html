@@ -6,46 +6,46 @@
     <meta name="description" content="A MEDIDA Confecciones. Uniformes escolares, empresariales y de salud hechos a la medida.">
     <meta name="theme-color" content="#1e2a44">
     <title>A MEDIDA Confecciones | Sastrería y Confección</title>
-    <!-- Favicon: la A en oro sobre campo azul, según el bloque 04 del sistema -->
+    <!-- Favicon: the gold A on a blue field, per block 04 of the system -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-    <!-- Tipografías del sistema: didona para la marca, sans para servicio, mono para cifras -->
+    <!-- System typefaces: Didone for the brand, sans for service, mono for figures -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:wght@400;700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/src/estilos/tokens.css">
-    <link rel="stylesheet" href="/src/estilos/contenido.css">
+    <link rel="stylesheet" href="/src/styles/tokens.css">
+    <link rel="stylesheet" href="/src/styles/content.css">
     <script type="module" src="/src/main.js"></script>
 </head>
 <body>
-    <!-- El sitio es una columna de cinta métrica sobre el suelo crema:
-         graduada en los dos costados y rematada por la punta de oro -->
-    <am-cinta>
-        <!-- Portada: marca, servicio y contacto en la primera pantalla -->
-        <am-tramo portada id="inicio">
-            <div class="marca">
-                <p class="marca__nombre">
-                    <span class="marca__a">A</span><span class="marca__medida">Medida</span>
+    <!-- The site is a tape-measure column over the cream floor:
+         graduated on both sides and finished with the gold tip -->
+    <am-tape>
+        <!-- Cover: brand, service and contact on the first screen -->
+        <am-segment cover id="home">
+            <div class="brand">
+                <p class="brand__name">
+                    <span class="brand__a">A</span><span class="brand__measure">Medida</span>
                 </p>
-                <p class="marca__descriptor">Confecciones</p>
+                <p class="brand__descriptor">Confecciones</p>
             </div>
 
-            <span class="filete" aria-hidden="true"></span>
+            <span class="rule" aria-hidden="true"></span>
 
-            <h1 class="lema">Uniformes escolares, empresariales y de salud</h1>
+            <h1 class="tagline">Uniformes escolares, empresariales y de salud</h1>
 
-            <!-- Datos de contacto en Archivo, iconos en oro -->
-            <nav class="contacto" aria-label="Información de contacto">
-                <a href="tel:+573000000000" class="contacto__item" title="Llamar por teléfono">
-                    <svg class="contacto__icono" viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+            <!-- Contact details in Archivo, icons in gold -->
+            <nav class="contact" aria-label="Información de contacto">
+                <a href="tel:+573000000000" class="contact__item" title="Llamar por teléfono">
+                    <svg class="contact__icon" viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
                         <rect x="6" y="2" width="12" height="20" rx="3" stroke="currentColor" stroke-width="2"></rect>
                         <line x1="10" y1="18.5" x2="14" y2="18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
                     </svg>
                     <span>300 000 0000</span>
                 </a>
 
-                <a href="mailto:contacto@amedidaconfecciones.com" class="contacto__item contacto__item--correo" title="Enviar correo electrónico">
-                    <svg class="contacto__icono" viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+                <a href="mailto:contacto@amedidaconfecciones.com" class="contact__item contact__item--email" title="Enviar correo electrónico">
+                    <svg class="contact__icon" viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
                         <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"></rect>
                         <path d="M3 7 L12 13.5 L21 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
@@ -53,35 +53,35 @@
                 </a>
             </nav>
 
-            <p class="horario">Lunes a viernes 8:00 a 17:00 · sábados 8:00 a 12:00</p>
+            <p class="hours">Lunes a viernes 8:00 a 17:00 · sábados 8:00 a 12:00</p>
 
-            <!-- Acciones: rectángulos cortados a escuadra, borde en oro -->
-            <div class="acciones">
-                <a href="https://wa.me/573000000000" target="_blank" rel="noopener noreferrer" class="boton" title="Escribir por WhatsApp">
+            <!-- Actions: square-cut rectangles with a gold border -->
+            <div class="actions">
+                <a href="https://wa.me/573000000000" target="_blank" rel="noopener noreferrer" class="button" title="Escribir por WhatsApp">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                        <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.7-4.7A8.5 8.5 0 1 1 21 11.5Z" stroke="var(--cinta-acento)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.7-4.7A8.5 8.5 0 1 1 21 11.5Z" stroke="var(--tape-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
                     <span>WhatsApp</span>
                 </a>
-                <a href="#cotizar" class="boton">
+                <a href="#quote" class="button">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                        <line x1="4" y1="7" x2="20" y2="7" stroke="var(--cinta-acento)" stroke-width="2" stroke-linecap="round"></line>
-                        <line x1="4" y1="12" x2="16" y2="12" stroke="var(--cinta-acento)" stroke-width="2" stroke-linecap="round"></line>
-                        <line x1="4" y1="17" x2="12" y2="17" stroke="var(--cinta-acento)" stroke-width="2" stroke-linecap="round"></line>
+                        <line x1="4" y1="7" x2="20" y2="7" stroke="var(--tape-accent)" stroke-width="2" stroke-linecap="round"></line>
+                        <line x1="4" y1="12" x2="16" y2="12" stroke="var(--tape-accent)" stroke-width="2" stroke-linecap="round"></line>
+                        <line x1="4" y1="17" x2="12" y2="17" stroke="var(--tape-accent)" stroke-width="2" stroke-linecap="round"></line>
                     </svg>
                     <span>Cotizar</span>
                 </a>
             </div>
-        </am-tramo>
+        </am-segment>
 
-        <!-- Cotizador: prendas, cantidades y datos, en tres pasos -->
-        <am-tramo id="cotizar">
-            <am-cotizador></am-cotizador>
+        <!-- Quoter: garments, quantities and details, step by step -->
+        <am-segment id="quote">
+            <am-quoter></am-quoter>
 
             <noscript>
-                <p class="entrada">El cotizador necesita JavaScript. Escríbanos por WhatsApp al 300 000 0000 y armamos el pedido con usted.</p>
+                <p class="lead">El cotizador necesita JavaScript. Escríbanos por WhatsApp al 300 000 0000 y armamos el pedido con usted.</p>
             </noscript>
-        </am-tramo>
-    </am-cinta>
+        </am-segment>
+    </am-tape>
 </body>
 </html>

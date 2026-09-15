@@ -1,7 +1,7 @@
-# Compila el sitio y publica dist/ en GitHub Pages.
-# Antes Pages servía la raíz del repositorio; ahora hay paso de compilación,
-# así que el dominio propio depende de que public/CNAME llegue a dist/.
-name: Publicar sitio
+# Builds the site and publishes dist/ to GitHub Pages.
+# Pages used to serve the repository root; now there is a build step,
+# so the custom domain depends on public/CNAME making it into dist/.
+name: Deploy site
 
 on:
   push:
@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  construir:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,10 +31,10 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Verificar que el CNAME sobrevivió a la compilación
+      - name: Check that the CNAME survived the build
         run: |
           if [ ! -f dist/CNAME ]; then
-            echo "Falta dist/CNAME, el dominio propio dejaría de resolver"
+            echo "dist/CNAME is missing, the custom domain would stop resolving"
             exit 1
           fi
 
@@ -42,12 +42,12 @@ jobs:
         with:
           path: dist
 
-  publicar:
-    needs: construir
+  deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.despliegue.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: despliegue
+      - id: deployment
         uses: actions/deploy-pages@v4

@@ -1,23 +1,23 @@
-/* Cliente de la API del cotizador (functions/).
-   La dirección sale de VITE_API: .env apunta a producción y un .env.local
-   puede apuntar a los emuladores. */
+/* Client for the quoter API (functions/).
+   The base URL comes from VITE_API: .env points to production and a
+   .env.local can point to the emulators. */
 const API = import.meta.env.VITE_API;
 
-async function pedir(ruta, opciones) {
-    const respuesta = await fetch(`${API}/${ruta}`, opciones);
-    const cuerpo = await respuesta.json().catch(() => ({}));
-    if (!respuesta.ok) throw new Error(cuerpo.error ?? `La API respondió ${respuesta.status}`);
-    return cuerpo;
+async function request(path, options) {
+    const response = await fetch(`${API}/${path}`, options);
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error ?? `The API responded ${response.status}`);
+    return body;
 }
 
-export function traerCatalogo() {
-    return pedir('catalogo');
+export function fetchCatalog() {
+    return request('catalog');
 }
 
-export function cotizar(pedido) {
-    return pedir('cotizar', {
+export function quote(order) {
+    return request('quote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pedido),
+        body: JSON.stringify(order),
     });
 }

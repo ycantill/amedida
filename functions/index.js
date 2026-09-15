@@ -1,25 +1,25 @@
 /* ==========================================================================
-   API del cotizador
+   Quoter API
 
-   GET  /catalogo  prendas, tallas, tipos de dotación y precio del bordado
-   POST /cotizar   precio aproximado de un pedido
+   GET  /catalog  garments, sizes, uniform types and embroidery price
+   POST /quote    approximate price for an order
 
-   Las tarifas y los tramos de descuento viven en la Realtime Database, bajo
-   /catalogo, y no salen de aquí: el navegador solo recibe el resultado.
+   Rates and discount tiers live in the Realtime Database, under /catalog,
+   and never leave this code: the browser only receives the result.
    ========================================================================== */
 import { initializeApp } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 import { setGlobalOptions } from 'firebase-functions/options';
 import { onRequest } from 'firebase-functions/https';
 import * as logger from 'firebase-functions/logger';
-import { catalogoPublico, cotizar as calcular, PedidoInvalido } from './cotizacion.js';
+import { publicCatalog, quote as calculate, InvalidOrder } from './quote.js';
 
 initializeApp();
 
-/* Un sitio pequeño: un techo de instancias evita sorpresas en la factura */
+/* A small site: an instance ceiling avoids billing surprises */
 setGlobalOptions({ region: 'us-central1', maxInstances: 5 });
 
-const OPCIONES = {
+const OPTIONS = {
     cors: [
         'https://amedidaconfecciones.co',
         'https://www.amedidaconfecciones.co',
@@ -27,43 +27,43 @@ const OPCIONES = {
     ],
 };
 
-async function leerCatalogo() {
-    const datos = (await getDatabase().ref('catalogo').get()).val();
-    if (!datos?.prendas) throw new Error('La base no tiene /catalogo');
-    return datos;
+async function readCatalog() {
+    const data = (await getDatabase().ref('catalog').get()).val();
+    if (!data?.garments) throw new Error('The database has no /catalog');
+    return data;
 }
 
-function soloMetodo(metodo, peticion, respuesta) {
-    if (peticion.method === metodo) return true;
-    respuesta.set('Allow', metodo).status(405).json({ error: 'Método no permitido' });
+function allowOnly(method, request, response) {
+    if (request.method === method) return true;
+    response.set('Allow', method).status(405).json({ error: 'Method not allowed' });
     return false;
 }
 
-export const catalogo = onRequest(OPCIONES, async (peticion, respuesta) => {
-    if (!soloMetodo('GET', peticion, respuesta)) return;
+export const catalog = onRequest(OPTIONS, async (request, response) => {
+    if (!allowOnly('GET', request, response)) return;
 
     try {
-        const datos = await leerCatalogo();
-        respuesta.set('Cache-Control', 'public, max-age=300');
-        respuesta.json(catalogoPublico(datos));
+        const data = await readCatalog();
+        response.set('Cache-Control', 'public, max-age=300');
+        response.json(publicCatalog(data));
     } catch (error) {
-        logger.error('No se pudo leer el catálogo', error);
-        respuesta.status(500).json({ error: 'No se pudo leer el catálogo' });
+        logger.error('Could not read the catalog', error);
+        response.status(500).json({ error: 'Could not read the catalog' });
     }
 });
 
-export const cotizar = onRequest(OPCIONES, async (peticion, respuesta) => {
-    if (!soloMetodo('POST', peticion, respuesta)) return;
+export const quote = onRequest(OPTIONS, async (request, response) => {
+    if (!allowOnly('POST', request, response)) return;
 
     try {
-        const datos = await leerCatalogo();
-        respuesta.json(calcular(datos, peticion.body));
+        const data = await readCatalog();
+        response.json(calculate(data, request.body));
     } catch (error) {
-        if (error instanceof PedidoInvalido) {
-            respuesta.status(400).json({ error: error.message });
+        if (error instanceof InvalidOrder) {
+            response.status(400).json({ error: error.message });
             return;
         }
-        logger.error('No se pudo cotizar', error);
-        respuesta.status(500).json({ error: 'No se pudo calcular el precio' });
+        logger.error('Could not calculate the quote', error);
+        response.status(500).json({ error: 'Could not calculate the price' });
     }
 });
