@@ -246,6 +246,10 @@ am-quoter {
     text-wrap: pretty;
 }
 
+/* The line that introduces the closing actions, set apart from the button
+   that comes before it */
+.lead--spaced { padding-top: 14px; }
+
 .label {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -278,9 +282,61 @@ am-quoter {
 }
 
 /* ==========================================================================
-   5. GARMENT CATALOG
+   5. PRODUCT LINES
+   Full-width buttons: each one shows or hides its garments
+   ========================================================================== */
+.lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.line-button {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 18px;
+    border: 1px solid var(--tape-rule);
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-text);
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    color: var(--tape-descriptor);
+    text-align: left;
+    transition: var(--transition);
+}
+
+.line-button:hover {
+    border-color: var(--tape-accent);
+    color: var(--tape-text);
+}
+
+.line-button--active {
+    background: rgba(168, 130, 58, 0.18);
+    border-color: var(--tape-accent);
+    color: var(--tape-text-strong);
+}
+
+/* ==========================================================================
+   6. GARMENT CATALOG
    Two-column cards with a drawing of each garment
    ========================================================================== */
+.picker {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.picker__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.picker__head .stitch { flex: 1; }
+
 .catalog {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -293,7 +349,7 @@ am-quoter {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    min-height: 132px;
+    min-height: 142px;
     padding: 18px 10px;
     border: 1px solid var(--tape-rule);
     background: none;
@@ -322,12 +378,14 @@ am-quoter {
 .garment-card__name {
     font-family: var(--font-text);
     font-weight: 500;
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.35;
     letter-spacing: 0.01em;
+    text-wrap: pretty;
 }
 
 /* ==========================================================================
-   6. CHIP: the embroidery toggle
+   7. CHIP: the embroidery toggle
    ========================================================================== */
 .chips {
     display: flex;
@@ -358,7 +416,7 @@ am-quoter {
 }
 
 /* ==========================================================================
-   7. FIELDS
+   8. FIELDS
    ========================================================================== */
 .field {
     display: flex;
@@ -408,7 +466,7 @@ am-quoter {
 }
 
 /* ==========================================================================
-   8. GARMENT CARD AND SIZES
+   9. GARMENT CARD AND SIZES
    ========================================================================== */
 .garments {
     display: flex;
@@ -505,7 +563,7 @@ am-quoter {
 }
 
 /* ==========================================================================
-   9. LOADER
+   10. LOADER
    Takes the price's place while the quote service responds
    ========================================================================== */
 .loader {
@@ -548,7 +606,7 @@ am-quoter {
 }
 
 /* ==========================================================================
-   10. PRICE
+   11. PRICE
    ========================================================================== */
 .price {
     display: flex;
@@ -628,7 +686,7 @@ am-quoter {
 }
 
 /* ==========================================================================
-   11. FAREWELL
+   12. FAREWELL
    ========================================================================== */
 .farewell {
     display: flex;
@@ -664,7 +722,7 @@ button:focus-visible {
 }
 
 /* ==========================================================================
-   12. NARROW SCREENS
+   13. NARROW SCREENS
    ========================================================================== */
 @media (max-width: 400px) {
     .size { width: calc(33.333% - 7px); }
@@ -674,7 +732,7 @@ button:focus-visible {
 }
 
 /* ==========================================================================
-   13. FLOATING BAR
+   14. FLOATING BAR
    Appears at the bottom when the next thing to do has scrolled off
    screen. It fades over the tape field so it doesn't cut off abruptly.
    ========================================================================== */
