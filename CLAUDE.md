@@ -12,7 +12,7 @@ Todo el código va en inglés, incluidos los comentarios:
 
 El texto que ve el cliente se queda en español: textos de la interfaz, la
 plantilla del mensaje de WhatsApp y correo, los nombres de las prendas y los
-tipos de dotación en `database/catalog.json`, y `lang="es"` en `index.html`.
+tipos de dotación en `database/database.json`, y `lang="es"` en `index.html`.
 El README también está en español.
 
 Glosario usado al traducir: cinta → tape, tramo → segment, portada → cover,

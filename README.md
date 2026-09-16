@@ -44,46 +44,88 @@ o calcular el precio. Se sabe con un observador de intersección sobre cada uno
 de esos tres elementos, así la página no se mueve bajo los dedos de quien está
 tocando tarjetas.
 
-El catálogo y el precio vienen de la API (ver abajo). Los dibujos de las
-prendas están en `src/components/garment-icons.js`, con la misma clave que
-cada prenda tiene en la base.
+El catálogo, con las tarifas, viene de la API (ver abajo) y el precio se
+calcula en el navegador, en `src/quote.js`. Los dibujos de las prendas están
+en `src/components/garment-icons.js`, con la misma clave que cada prenda
+tiene en la base.
 
 ## La API
 
 Dos Cloud Functions en `functions/`, que leen la Realtime Database
-(`amedida-b6831-default-rtdb`) bajo `/catalog`:
+(`amedida-b6831-default-rtdb`):
 
-- `GET /catalog` — líneas (`lines`, con `id` y `name`), prendas (`id`, `name`
-  y la línea a la que pertenecen), tallas (`sizes`) y precio del bordado
-  (`embroidery`). No incluye tarifas (`rate`) ni tramos de descuento (`tiers`).
-- `POST /quote` — recibe
-  `{ "lines": [{ "garment": "polo-shirt", "sizes": { "M": 10 }, "embroidery": true }] }`
-  y devuelve `items`, `units`, `discount` y `total`. Responde 400 si el
-  pedido trae prendas, tallas o cantidades que no existen.
+- `GET /catalog` — lee `/catalog` y entrega líneas (`lines`, con `id` y
+  `name`), prendas (`id`, `name`, `line` y `rate`), tallas (`sizes`), tramos
+  de descuento (`tiers`) y precio del bordado (`embroidery`). Con eso el
+  cotizador calcula el pedido sin volver a llamar a la API. Queda en caché
+  5 minutos.
+- `GET /updateRates?key=…` — recalcula la tarifa de cada prenda a partir de
+  los costos y la escribe en `/catalog/garments/<id>/rate`. Se abre a mano en
+  el navegador y responde una tabla con el costo, la tarifa anterior y la
+  nueva. Responde 401 si la clave no coincide.
 
-Ojo con el nombre: en el pedido, `lines` son los renglones del pedido. Las
-líneas de dotación son otra cosa y viven en `/catalog/lines`.
+### De dónde sale la tarifa
 
-Las reglas de la base (`database.rules.json`) cierran lectura y escritura:
-solo las funciones entran, con el Admin SDK. Las reglas del cálculo están en
-`functions/quote.js` y se prueban con `npm test` dentro de `functions/`.
+Los costos viven fuera de `/catalog` y nunca salen de las funciones:
 
-Cambiar un precio, una prenda o un tramo es editar `database/catalog.json` y
-subirlo:
+- `/settings` — merma de tela (`fabricWasteMargin`), costo del minuto de
+  confección (`costPerMinuteLabor`), costos indirectos por prenda
+  (`cifPerGarment`) y margen bruto objetivo (`targetGrossMargin`). Son todos
+  obligatorios: si falta uno, no se toca ninguna tarifa.
+- `/fabrics` — telas con su precio por metro.
+- `/recipes` — por prenda, la tela, los metros, los minutos de confección y
+  el costo de insumos (`trimsCost`).
 
 ```
-firebase database:set /catalog database/catalog.json
+costo  = metros × precio del metro × (1 + merma)
+       + minutos × costo del minuto
+       + insumos + costos indirectos
+tarifa = costo ÷ (1 − margen), redondeada hacia arriba al millar
 ```
+
+Una prenda sin receta, o cuya tela no existe, conserva su tarifa y aparece
+en la lista de “Sin recalcular”. Una receta sin prenda en el catálogo se
+ignora. Las reglas del cálculo están en `functions/rates.js`.
+
+### Cambiar precios
+
+Cambiar un costo, una tela, una receta, un tramo o una prenda es editar
+`database/database.json`, subirlo y recalcular:
+
+```
+firebase database:set / database/database.json
+open "https://us-central1-amedida-b6831.cloudfunctions.net/updateRates?key=<clave>"
+```
+
+`database:set /` reemplaza la base entera con el archivo. Las tarifas del
+archivo deben coincidir con las que calcula el servicio: una prueba lo
+verifica, así que después de cambiar costos hay que actualizar también los
+`rate` del archivo (la tabla de `updateRates` los muestra).
+
+La clave es un secreto de Firebase. Se crea una vez, antes del primer
+despliegue:
+
+```
+firebase functions:secrets:set ADMIN_SECRET_KEY
+```
+
+La clave viaja en la dirección, así que queda en el historial del navegador:
+no la comparta y cámbiela si se filtra.
 
 Una prenda nueva necesita además su dibujo en `garment-icons.js`, con la misma
-clave, y pertenecer a una línea existente: si su `line` no está en
-`/catalog/lines`, la API no la entrega.
+clave, su receta en `/recipes` y pertenecer a una línea existente: si su
+`line` no está en `/catalog/lines`, o no tiene `rate`, la API no la entrega.
 
-El cotizador necesita que `GET /catalog` entregue `lines`. Si la API
-desplegada es anterior a las líneas de dotación, la página no intenta
+### Despliegue y pruebas
+
+El cotizador necesita que `GET /catalog` entregue `lines`, `tiers` y el `rate`
+de cada prenda. Si la API desplegada es anterior, la página no intenta
 dibujar medio cotizador: muestra el aviso de que no pudo traer el catálogo,
-con un botón para reintentar, y deja el motivo en la consola. Subir el
-catálogo a la base no basta, hay que desplegar también las funciones.
+con un botón para reintentar, y deja el motivo en la consola. Subir la base
+no basta, hay que desplegar también las funciones.
+
+Las reglas de la base (`database.rules.json`) cierran lectura y escritura:
+solo las funciones entran, con el Admin SDK.
 
 Publicar las funciones y las reglas (requiere el plan Blaze):
 
@@ -91,11 +133,15 @@ Publicar las funciones y las reglas (requiere el plan Blaze):
 firebase deploy --only functions,database
 ```
 
+Pruebas: `npm test` en la raíz (cálculo del pedido) y dentro de `functions/`
+(catálogo y tarifas).
+
 Para trabajar en local contra los emuladores:
 
 ```
+echo "ADMIN_SECRET_KEY=clave-local" > functions/.secret.local
 firebase emulators:start --only functions,database
-FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 firebase database:set /catalog database/catalog.json
+FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 firebase database:set / database/database.json
 echo "VITE_API=http://127.0.0.1:5001/amedida-b6831/us-central1" > .env.local
 npm run dev
 ```
@@ -112,9 +158,10 @@ producción).
   cotizador (`am-quoter`).
 - `src/format.js` — formato de precios.
 - `src/api.js` — cliente de la API.
-- `functions/` — la API del cotizador.
-- `database/catalog.json` — líneas, prendas, tarifas, tallas y descuentos que
-  van a la base.
+- `src/quote.js` — cálculo del precio aproximado de un pedido.
+- `functions/` — la API del cotizador y el recálculo de tarifas.
+- `database/database.json` — la base completa: catálogo (líneas, prendas,
+  tarifas, tallas y descuentos) y costos (parámetros, telas y recetas).
 - `public/` — lo que se copia tal cual: CNAME y favicon.
 
 El texto y los enlaces se quedan en `index.html`, fuera de los componentes,

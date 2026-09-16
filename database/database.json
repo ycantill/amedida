@@ -1,0 +1,76 @@
+{
+  "catalog": {
+    "embroidery": 6000,
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "tiers": [
+      { "discount": 0.18, "from": 200 },
+      { "discount": 0.12, "from": 100 },
+      { "discount": 0.08, "from": 50 }
+    ],
+    "lines": {
+      "industrial": { "name": "Industrial y operativa", "sortOrder": 1 },
+      "health": { "name": "Salud, estética y alimentos", "sortOrder": 2 },
+      "office": { "name": "Administrativa y formal", "sortOrder": 3 },
+      "knit": { "name": "Tejido de punto y colegial", "sortOrder": 4 }
+    },
+    "garments": {
+      "drill-trousers": { "line": "industrial", "name": "Pantalón clásico de dril", "rate": 71000, "sortOrder": 1 },
+      "cargo-trousers": { "line": "industrial", "name": "Pantalón tipo cargo", "rate": 85000, "sortOrder": 2 },
+      "work-shirt": { "line": "industrial", "name": "Camisa de trabajo", "rate": 71000, "sortOrder": 3 },
+      "coveralls": { "line": "industrial", "name": "Overol enterizo", "rate": 141000, "sortOrder": 4 },
+      "jacket-set": { "line": "industrial", "name": "Conjunto chaqueta y pantalón", "rate": 155000, "sortOrder": 5 },
+      "brigade-vest": { "line": "industrial", "name": "Chaleco brigadista", "rate": 76000, "sortOrder": 6 },
+      "v-neck-top": { "line": "health", "name": "Blusa médica cuello en V", "rate": 79000, "sortOrder": 7 },
+      "mandarin-top": { "line": "health", "name": "Blusa médica cuello nerú", "rate": 84000, "sortOrder": 8 },
+      "scrub-trousers": { "line": "health", "name": "Pantalón médico", "rate": 86000, "sortOrder": 9 },
+      "scrub-set": { "line": "health", "name": "Conjunto quirúrgico", "rate": 155000, "sortOrder": 10 },
+      "lab-coat": { "line": "health", "name": "Bata médica o de laboratorio", "rate": 127000, "sortOrder": 11 },
+      "waterproof-apron": { "line": "health", "name": "Delantal antifluido", "rate": 53000, "sortOrder": 12 },
+      "dress-shirt": { "line": "office", "name": "Camisa ejecutiva de botones", "rate": 96000, "sortOrder": 13 },
+      "dress-blouse": { "line": "office", "name": "Blusa formal femenina", "rate": 92000, "sortOrder": 14 },
+      "tailored-trousers": { "line": "office", "name": "Pantalón formal de sastre", "rate": 93000, "sortOrder": 15 },
+      "polo-shirt": { "line": "knit", "name": "Camiseta tipo polo", "rate": 61000, "sortOrder": 16 },
+      "crew-neck-tee": { "line": "knit", "name": "Camiseta cuello redondo", "rate": 40000, "sortOrder": 17 },
+      "sweatpants": { "line": "knit", "name": "Pantalón de sudadera", "rate": 71000, "sortOrder": 18 },
+      "track-jacket": { "line": "knit", "name": "Chaqueta deportiva", "rate": 97000, "sortOrder": 19 }
+    }
+  },
+  "settings": {
+    "cifPerGarment": 5500,
+    "costPerMinuteLabor": 190,
+    "fabricWasteMargin": 0.07,
+    "targetGrossMargin": 0.35
+  },
+  "fabrics": {
+    "dril_vulcano_fabricato": { "name": "Dril Vulcano 100% Algodón", "pricePerMeter": 18500, "supplier": "Fabricato" },
+    "dril_tiber_fabricato": { "name": "Dril Tiber Poliéster-Algodón", "pricePerMeter": 15200, "supplier": "Fabricato" },
+    "universal_lafayette": { "name": "Universal Clororesistente", "pricePerMeter": 28500, "supplier": "Lafayette" },
+    "microfibra_lafayette": { "name": "Microfibra Antifluido", "pricePerMeter": 21000, "supplier": "Lafayette" },
+    "oxford_camisero_lafayette": { "name": "Oxford Ejecutivo", "pricePerMeter": 22500, "supplier": "Lafayette" },
+    "gabardina_sastre": { "name": "Paño Gabardina Poliéster Viscosa", "pricePerMeter": 24000, "supplier": "Nacional" },
+    "pique_polialgodon": { "name": "Piqué Poli-Algodón 220g", "pricePerMeter": 19500, "supplier": "Nacional" },
+    "algodon_jersey_peinado": { "name": "Algodón Peinado 180g", "pricePerMeter": 15000, "supplier": "Nacional" },
+    "frisa_sudadera": { "name": "Frisa Deportiva Perchada", "pricePerMeter": 21000, "supplier": "Nacional" }
+  },
+  "recipes": {
+    "drill-trousers": { "fabricId": "dril_vulcano_fabricato", "meters": 1.30, "assemblyMinutes": 55, "trimsCost": 4200 },
+    "cargo-trousers": { "fabricId": "dril_vulcano_fabricato", "meters": 1.50, "assemblyMinutes": 75, "trimsCost": 5800 },
+    "work-shirt": { "fabricId": "dril_tiber_fabricato", "meters": 1.55, "assemblyMinutes": 60, "trimsCost": 3500 },
+    "coveralls": { "fabricId": "dril_vulcano_fabricato", "meters": 2.80, "assemblyMinutes": 110, "trimsCost": 9500 },
+    "jacket-set": { "fabricId": "dril_vulcano_fabricato", "meters": 3.00, "assemblyMinutes": 130, "trimsCost": 11000 },
+    "brigade-vest": { "fabricId": "dril_vulcano_fabricato", "meters": 1.20, "assemblyMinutes": 65, "trimsCost": 7500 },
+    "v-neck-top": { "fabricId": "universal_lafayette", "meters": 1.15, "assemblyMinutes": 45, "trimsCost": 2200 },
+    "mandarin-top": { "fabricId": "universal_lafayette", "meters": 1.20, "assemblyMinutes": 50, "trimsCost": 2800 },
+    "scrub-trousers": { "fabricId": "universal_lafayette", "meters": 1.25, "assemblyMinutes": 45, "trimsCost": 3200 },
+    "scrub-set": { "fabricId": "universal_lafayette", "meters": 2.40, "assemblyMinutes": 85, "trimsCost": 5400 },
+    "lab-coat": { "fabricId": "universal_lafayette", "meters": 1.90, "assemblyMinutes": 75, "trimsCost": 4500 },
+    "waterproof-apron": { "fabricId": "microfibra_lafayette", "meters": 0.90, "assemblyMinutes": 30, "trimsCost": 2500 },
+    "dress-shirt": { "fabricId": "oxford_camisero_lafayette", "meters": 1.60, "assemblyMinutes": 70, "trimsCost": 4800 },
+    "dress-blouse": { "fabricId": "oxford_camisero_lafayette", "meters": 1.50, "assemblyMinutes": 70, "trimsCost": 4800 },
+    "tailored-trousers": { "fabricId": "gabardina_sastre", "meters": 1.35, "assemblyMinutes": 75, "trimsCost": 5500 },
+    "polo-shirt": { "fabricId": "pique_polialgodon", "meters": 1.05, "assemblyMinutes": 40, "trimsCost": 4500 },
+    "crew-neck-tee": { "fabricId": "algodon_jersey_peinado", "meters": 0.85, "assemblyMinutes": 25, "trimsCost": 1800 },
+    "sweatpants": { "fabricId": "frisa_sudadera", "meters": 1.25, "assemblyMinutes": 45, "trimsCost": 3800 },
+    "track-jacket": { "fabricId": "frisa_sudadera", "meters": 1.60, "assemblyMinutes": 75, "trimsCost": 6800 }
+  }
+}

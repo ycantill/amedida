@@ -1,7 +1,7 @@
 /* ==========================================================================
-   Quoter rules, with no Firebase at all: they take the catalog exactly as it
-   is stored in the database (/catalog) and return answers. That way they
-   can be tested on their own.
+   Quoter rules. They take the catalog exactly as GET /catalog delivers it
+   (garments as a list, each with its rate) and return the approximate
+   price. No DOM and no fetch, so they can be tested with node on their own.
    ========================================================================== */
 
 /* Per-size cap so an absurd number doesn't pass as an order */
@@ -9,38 +9,15 @@ const MAX_PER_SIZE = 100000;
 
 export class InvalidOrder extends Error {}
 
-/* What the browser is allowed to see: no rates and no discount tiers */
-export function publicCatalog(data) {
-    const byOrder = (a, b) => (a[1].sortOrder ?? 0) - (b[1].sortOrder ?? 0);
-
-    const lines = Object.entries(data.lines ?? {})
-        .sort(byOrder)
-        .map(([id, { name }]) => ({ id, name }));
-
-    /* A garment whose line no longer exists would never be reachable from
-       the line picker, so it is left out rather than shown loose */
-    const garments = Object.entries(data.garments ?? {})
-        .filter(([, garment]) => data.lines?.[garment.line])
-        .sort(byOrder)
-        .map(([id, { name, line }]) => ({ id, name, line }));
-
-    return {
-        lines,
-        garments,
-        sizes: data.sizes ?? [],
-        embroidery: data.embroidery ?? 0,
-    };
-}
-
 function volumeDiscount(tiers, units) {
     return [...(tiers ?? [])]
         .sort((a, b) => b.from - a.from)
         .find((tier) => units >= tier.from)?.discount ?? 0;
 }
 
-function sanitizeLine(data, line, seen) {
+function sanitizeLine(catalog, line, seen) {
     const id = line?.garment;
-    const garment = data.garments?.[id];
+    const garment = catalog.garments.find((g) => g.id === id);
     if (!garment) throw new InvalidOrder(`Unknown garment: ${id}`);
     if (seen.has(id)) throw new InvalidOrder(`Duplicate garment: ${id}`);
     seen.add(id);
@@ -51,12 +28,12 @@ function sanitizeLine(data, line, seen) {
     }
 
     Object.keys(input).forEach((size) => {
-        if (!data.sizes.includes(size)) throw new InvalidOrder(`Unknown size: ${size}`);
+        if (!catalog.sizes.includes(size)) throw new InvalidOrder(`Unknown size: ${size}`);
     });
 
     /* Sizes come out in scale order, not in the order they arrived */
     const sizes = {};
-    data.sizes.forEach((size) => {
+    catalog.sizes.forEach((size) => {
         const quantity = input[size];
         if (quantity === undefined) return;
         if (!Number.isInteger(quantity) || quantity < 0 || quantity > MAX_PER_SIZE) {
@@ -66,7 +43,6 @@ function sanitizeLine(data, line, seen) {
     });
 
     return {
-        id,
         garment,
         sizes,
         embroidery: line.embroidery === true,
@@ -75,9 +51,9 @@ function sanitizeLine(data, line, seen) {
 }
 
 /**
- * order: { lines: [{ garment: 'shirt', sizes: { M: 10 }, embroidery: true }] }
+ * order: { lines: [{ garment: 'polo-shirt', sizes: { M: 10 }, embroidery: true }] }
  */
-export function quote(data, order) {
+export function quote(catalog, order) {
     const lines = order?.lines;
     if (!Array.isArray(lines) || lines.length === 0) {
         throw new InvalidOrder('The order has no garments');
@@ -85,19 +61,19 @@ export function quote(data, order) {
 
     const seen = new Set();
     const withUnits = lines
-        .map((line) => sanitizeLine(data, line, seen))
+        .map((line) => sanitizeLine(catalog, line, seen))
         .filter((line) => line.quantity > 0);
 
     if (!withUnits.length) throw new InvalidOrder('The order has no units');
 
     const units = withUnits.reduce((sum, l) => sum + l.quantity, 0);
-    const discount = volumeDiscount(data.tiers, units);
+    const discount = volumeDiscount(catalog.tiers, units);
 
-    const items = withUnits.map(({ id, garment, sizes, embroidery, quantity }) => {
+    const items = withUnits.map(({ garment, sizes, embroidery, quantity }) => {
         const base = Math.round(garment.rate * (1 - discount));
-        const unitPrice = base + (embroidery ? data.embroidery : 0);
+        const unitPrice = base + (embroidery ? catalog.embroidery : 0);
         return {
-            garment: id,
+            garment: garment.id,
             name: garment.name,
             quantity,
             sizes,

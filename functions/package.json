@@ -1,6 +1,6 @@
 {
   "name": "amedida-functions",
-  "description": "Quoter API: catalog and approximate price",
+  "description": "Quoter API: catalog with rates and rate recalculation",
   "private": true,
   "type": "module",
   "main": "index.js",
