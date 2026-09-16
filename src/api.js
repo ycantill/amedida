@@ -10,14 +10,8 @@ async function request(path, options) {
     return body;
 }
 
-export function fetchCatalog() {
-    return request('catalog');
-}
-
-export function quote(order) {
-    return request('quote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order),
-    });
+/* The catalog is cached for a few minutes. `fresh` skips that cache, so a
+   retry after a deploy doesn't get the same stale answer again. */
+export function fetchCatalog({ fresh = false } = {}) {
+    return request('catalog', fresh ? { cache: 'reload' } : undefined);
 }

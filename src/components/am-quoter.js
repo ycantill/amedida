@@ -2,7 +2,8 @@ import { LitElement, html, nothing } from 'lit';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { currency } from '../format.js';
-import { fetchCatalog, quote } from '../api.js';
+import { fetchCatalog } from '../api.js';
+import { quote } from '../quote.js';
 import { ICONS } from './garment-icons.js';
 
 const WHATSAPP = '573000000000';
@@ -13,8 +14,8 @@ const EMPTY_LINE = { sizes: {}, embroidery: false, note: '' };
 /* Space left when scrolling something into view, so it isn't stuck to the edge */
 const MARGIN = 24;
 
-/* A minimum pause before showing the price: if the API responds very
-   quickly, the price pops in abruptly and doesn't read as an answer */
+/* A pause before showing the price: it is calculated on the spot, and a
+   price that pops in instantly doesn't read as an answer */
 const MIN_DELAY = 900;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -28,8 +29,8 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * scrolled off screen. That keeps the flow going without moving the page
  * under the fingers of someone tapping cards.
  *
- * The catalog and the price come from the API (functions/). The price is a
- * reference, and the screen says so.
+ * The catalog, with the rates, comes from the API (functions/); the price is
+ * calculated here (quote.js). It is a reference, and the screen says so.
  */
 export class AmQuoter extends LitElement {
     static properties = {
@@ -56,8 +57,7 @@ export class AmQuoter extends LitElement {
     constructor() {
         super();
         /* Each calculation carries a round number. If the form changes
-           while the API is responding, the response arrives stale and is
-           discarded. */
+           during the pause, the result arrives stale and is discarded. */
         this.round = 0;
         this.watchers = new Map();
         this.catalog = null;
@@ -91,14 +91,19 @@ export class AmQuoter extends LitElement {
 
     /* ---------- Reading ---------- */
 
-    async loadCatalog() {
+    async loadCatalog({ fresh = false } = {}) {
         this.catalogFailed = false;
         try {
-            const catalog = await fetchCatalog();
-            /* An API older than this page answers without product lines. Better
-               to show the error than to render half a quoter. */
+            const catalog = await fetchCatalog({ fresh });
+            /* An API older than this page answers without product lines or
+               without rates. Better to show the error than to render half a
+               quoter, or one that can't price. */
             if (!Array.isArray(catalog.lines) || !catalog.lines.length) {
                 throw new Error('The catalog has no product lines: the API is out of date');
+            }
+            if (!Array.isArray(catalog.tiers)
+                || !catalog.garments.every((garment) => Number.isFinite(garment.rate))) {
+                throw new Error('The catalog has no rates: the API is out of date');
             }
             this.catalog = catalog;
             this.lines = catalog.lines.slice(0, 1).map((line) => line.id);
@@ -332,20 +337,21 @@ export class AmQuoter extends LitElement {
         this.priceFailed = false;
 
         /* The loader takes the place the price will occupy: bring it into
-           view while the API responds */
+           view during the pause */
         this.updateComplete.then(() => {
             if (round === this.round) this.scrollToElement('#loader');
         });
 
+        await wait(MIN_DELAY);
+        if (round !== this.round) return;
+        this.calculating = false;
+
         let response = null;
         try {
-            [response] = await Promise.all([quote(this.order), wait(MIN_DELAY)]);
+            response = quote(this.catalog, this.order);
         } catch (error) {
             console.error(error);
         }
-
-        if (round !== this.round) return;
-        this.calculating = false;
 
         if (!response) {
             this.priceFailed = true;
@@ -564,7 +570,7 @@ export class AmQuoter extends LitElement {
         `;
     }
 
-    /* While the quote service responds: a tape ruler running under a line
+    /* During the pause before the price: a tape ruler running under a line
        that says what is being measured */
     loader() {
         return html`
@@ -721,7 +727,7 @@ export class AmQuoter extends LitElement {
                 ${this.catalogFailed
                     ? html`
                         <p class="note note--flagged">No pudimos traer el catálogo de prendas.</p>
-                        <button type="button" class="button button--outline" @click=${this.loadCatalog}>
+                        <button type="button" class="button button--outline" @click=${() => this.loadCatalog({ fresh: true })}>
                             Intentar de nuevo
                         </button>`
                     : html`<p class="lead">Cargando el catálogo…</p>`}
