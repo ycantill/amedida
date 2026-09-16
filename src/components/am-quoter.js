@@ -37,9 +37,9 @@ export class AmQuoter extends LitElement {
         catalogFailed: { state: true },
         priceFailed: { state: true },
         step: { state: true },
-        type: { state: true },
-        selection: { state: true },
         lines: { state: true },
+        selection: { state: true },
+        orders: { state: true },
         estimate: { state: true },
         calculating: { state: true },
         continueInView: { state: true },
@@ -64,9 +64,10 @@ export class AmQuoter extends LitElement {
         this.catalogFailed = false;
         this.priceFailed = false;
         this.step = 1;
-        this.type = '';
+        /* Ids of the product lines on show. At least one is always on */
+        this.lines = [];
         this.selection = [];
-        this.lines = {};
+        this.orders = {};
         this.estimate = null;
         this.calculating = false;
         /* Start by assuming everything is in view: that way the bar doesn't
@@ -93,10 +94,17 @@ export class AmQuoter extends LitElement {
     async loadCatalog() {
         this.catalogFailed = false;
         try {
-            this.catalog = await fetchCatalog();
-            this.type = this.catalog.types[0] ?? '';
+            const catalog = await fetchCatalog();
+            /* An API older than this page answers without product lines. Better
+               to show the error than to render half a quoter. */
+            if (!Array.isArray(catalog.lines) || !catalog.lines.length) {
+                throw new Error('The catalog has no product lines: the API is out of date');
+            }
+            this.catalog = catalog;
+            this.lines = catalog.lines.slice(0, 1).map((line) => line.id);
         } catch (error) {
             console.error(error);
+            this.catalog = null;
             this.catalogFailed = true;
         }
     }
@@ -106,12 +114,28 @@ export class AmQuoter extends LitElement {
         return this.catalog?.garments.find((garment) => garment.name === name)?.id ?? '';
     }
 
-    line(garment) {
-        return this.lines[garment] ?? EMPTY_LINE;
+    /* Garments of the lines currently on show */
+    get visibleGarments() {
+        return this.catalog.garments.filter((garment) => this.lines.includes(garment.line));
+    }
+
+    /* Lines the order actually covers, to name them in the message */
+    get orderedLines() {
+        const withGarments = this.catalog.lines.filter((line) =>
+            this.catalog.garments.some((garment) =>
+                garment.line === line.id && this.selection.includes(garment.name)));
+        const shown = withGarments.length
+            ? withGarments
+            : this.catalog.lines.filter((line) => this.lines.includes(line.id));
+        return shown.map((line) => line.name);
+    }
+
+    orderFor(garment) {
+        return this.orders[garment] ?? EMPTY_LINE;
     }
 
     units(garment) {
-        return Object.values(this.line(garment).sizes)
+        return Object.values(this.orderFor(garment).sizes)
             .reduce((sum, quantity) => sum + (parseInt(quantity, 10) || 0), 0);
     }
 
@@ -153,6 +177,23 @@ export class AmQuoter extends LitElement {
         this.priceFailed = false;
     }
 
+    /* At least one line always stays on. Garments of a line that is switched
+       off leave the selection with it, so nothing invisible is quoted. */
+    toggleLine(id) {
+        const next = this.lines.includes(id)
+            ? this.lines.filter((line) => line !== id)
+            : [...this.lines, id];
+        if (!next.length) return;
+
+        this.lines = next;
+        const visible = this.catalog.garments
+            .filter((garment) => next.includes(garment.line))
+            .map((garment) => garment.name);
+        this.selection = this.selection.filter((name) => visible.includes(name));
+        this.clearEstimate();
+        this.updateComplete.then(() => this.scrollToElement('#garments'));
+    }
+
     toggleGarment(garment) {
         this.selection = this.selection.includes(garment)
             ? this.selection.filter((g) => g !== garment)
@@ -161,15 +202,15 @@ export class AmQuoter extends LitElement {
     }
 
     updateLine(garment, changes) {
-        this.lines = {
-            ...this.lines,
-            [garment]: { ...this.line(garment), ...changes },
+        this.orders = {
+            ...this.orders,
+            [garment]: { ...this.orderFor(garment), ...changes },
         };
     }
 
     setSize(garment, size, value) {
         const clean = value.replace(/[^0-9]/g, '');
-        const sizes = { ...this.line(garment).sizes };
+        const sizes = { ...this.orderFor(garment).sizes };
         if (clean === '' || clean === '0') delete sizes[size];
         else sizes[size] = clean;
         this.updateLine(garment, { sizes });
@@ -183,7 +224,9 @@ export class AmQuoter extends LitElement {
        tape column, which has `overflow: hidden` and doesn't move, so the
        document stays still. Computing the target avoids that ambiguity. */
     scrollToElement(selector) {
-        const target = this.querySelector(selector);
+        /* Most targets are the quoter's own anchors, but the segment that
+           wraps it is an ancestor, so the page is the fallback */
+        const target = this.querySelector(selector) ?? document.querySelector(selector);
         if (!target) return;
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         window.scrollTo({
@@ -267,11 +310,10 @@ export class AmQuoter extends LitElement {
 
     get order() {
         return {
-            type: this.type,
             lines: this.selection
                 .filter((garment) => this.units(garment) > 0)
                 .map((garment) => {
-                    const { sizes, embroidery } = this.line(garment);
+                    const { sizes, embroidery } = this.orderFor(garment);
                     return {
                         garment: this.idOf(garment),
                         embroidery,
@@ -327,14 +369,15 @@ export class AmQuoter extends LitElement {
 
     get message() {
         const lines = ['Hola A Medida Confecciones, quiero cotizar una dotación.'];
-        lines.push(`Tipo: ${this.type}`);
+        const names = this.orderedLines;
+        lines.push(`${names.length === 1 ? 'Línea' : 'Líneas'}: ${names.join(' / ')}`);
 
         this.selection.forEach((garment) => {
-            const { embroidery, note } = this.line(garment);
+            const { embroidery, note } = this.orderFor(garment);
             const parts = [];
             const quantity = this.units(garment);
             if (quantity) parts.push(`${quantity} unidades`);
-            const sizes = this.describeSizes(this.line(garment).sizes);
+            const sizes = this.describeSizes(this.orderFor(garment).sizes);
             if (sizes) parts.push(sizes);
             if (embroidery) parts.push('con bordado del logo');
             if (note.trim()) parts.push(note.trim());
@@ -353,7 +396,7 @@ export class AmQuoter extends LitElement {
     }
 
     get emailLink() {
-        const subject = encodeURIComponent(`Cotización de dotación · ${this.type}`);
+        const subject = encodeURIComponent(`Cotización de dotación · ${this.orderedLines.join(' / ')}`);
         return `mailto:${EMAIL}?subject=${subject}&body=${encodeURIComponent(this.message)}`;
     }
 
@@ -371,6 +414,11 @@ export class AmQuoter extends LitElement {
 
     /* ---------- Step 1 ---------- */
 
+    get garmentsLabel() {
+        const count = this.lines.length;
+        return count === 1 ? 'Prendas de la línea' : `Prendas de las ${count} líneas`;
+    }
+
     garmentCard({ name, id }) {
         const active = this.selection.includes(name);
         return html`
@@ -380,7 +428,7 @@ export class AmQuoter extends LitElement {
                 aria-pressed=${active}
                 @click=${() => this.toggleGarment(name)}
             >
-                <svg class="garment-card__drawing" width="62" height="62" viewBox="0 0 64 64"
+                <svg class="garment-card__drawing" width="60" height="60" viewBox="0 0 64 64"
                      fill="none" stroke="currentColor" stroke-width="1.6"
                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     ${ICONS[id]}
@@ -397,12 +445,33 @@ export class AmQuoter extends LitElement {
             ${this.stepLabel(1, 'Prendas')}
 
             <div class="block">
-                <h2 class="title">¿Qué prendas necesita?</h2>
-                <p class="lead">Toque las prendas que va a cotizar. Puede escoger varias.</p>
+                <h2 class="title">¿Qué líneas de dotación necesita?</h2>
+                <p class="lead">Puede escoger varias y le mostramos las prendas de todas ellas.</p>
             </div>
 
-            <div class="catalog">
-                ${this.catalog.garments.map((garment) => this.garmentCard(garment))}
+            <div class="lines">
+                ${this.catalog.lines.map((line) => {
+                    const active = this.lines.includes(line.id);
+                    return html`
+                        <button
+                            type="button"
+                            class=${classMap({ 'line-button': true, 'line-button--active': active })}
+                            aria-pressed=${active}
+                            @click=${() => this.toggleLine(line.id)}
+                        >${line.name}</button>
+                    `;
+                })}
+            </div>
+
+            <div class="picker" id="garments">
+                <div class="picker__head">
+                    <span class="label">${this.garmentsLabel}</span>
+                    <span class="stitch" aria-hidden="true"></span>
+                </div>
+                <div class="catalog">
+                    ${repeat(this.visibleGarments, (garment) => garment.id,
+                        (garment) => this.garmentCard(garment))}
+                </div>
             </div>
 
             <div class="block">
@@ -439,7 +508,7 @@ export class AmQuoter extends LitElement {
     /* ---------- Step 2 ---------- */
 
     lineCard(garment) {
-        const { embroidery, note, sizes } = this.line(garment);
+        const { embroidery, note, sizes } = this.orderFor(garment);
         const quantity = this.units(garment);
 
         return html`
@@ -553,32 +622,23 @@ export class AmQuoter extends LitElement {
                 <p class="lead">Reparta las unidades por talla. Deje en blanco las tallas que no necesita.</p>
             </div>
 
-            <label class="field">
-                <span class="field__label">Tipo de dotación</span>
-                <select
-                    class="field__control field__control--select"
-                    id="type"
-                    .value=${this.type}
-                    @change=${(e) => { this.type = e.target.value; this.clearEstimate(); }}
-                >
-                    ${this.catalog.types.map((t) => html`<option value=${t}>${t}</option>`)}
-                </select>
-            </label>
-
             <div class="garments">
                 ${repeat(this.selection, (g) => g, (garment) => this.lineCard(garment))}
             </div>
 
             <div class="block">
-                <button
-                    type="button"
-                    id="calculate"
-                    class=${classMap({ button: true, 'button--outline': this.canCalculate, 'button--inert': !this.canCalculate })}
-                    ?disabled=${!this.canCalculate || this.calculating}
-                    @click=${this.calculate}
-                >
-                    ${this.calculating ? 'Calculando…' : this.estimate ? 'Recalcular precio' : 'Calcular precio aproximado'}
-                </button>
+                ${this.estimate
+                    ? nothing
+                    : html`
+                        <button
+                            type="button"
+                            id="calculate"
+                            class=${classMap({ button: true, 'button--outline': this.canCalculate, 'button--inert': !this.canCalculate })}
+                            ?disabled=${!this.canCalculate || this.calculating}
+                            @click=${this.calculate}
+                        >
+                            ${this.calculating ? 'Calculando…' : 'Calcular precio aproximado'}
+                        </button>`}
 
                 ${!this.canCalculate
                     ? html`<p class="note">Reparta al menos una unidad por talla para calcular el precio.</p>`
@@ -602,7 +662,15 @@ export class AmQuoter extends LitElement {
     closing() {
         return html`
             <div class="block">
-                <p class="lead">Le llevamos su cotización al canal que prefiera para revisar telas, bordado y cerrar el pedido.</p>
+                <button type="button" class="button button--outline" @click=${() => this.scrollToElement('#quote')}>
+                    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+                        <line x1="12" y1="20" x2="12" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+                        <path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <span>Volver a cotizar</span>
+                </button>
+
+                <p class="lead lead--spaced">Le llevamos su cotización al canal que prefiera para revisar telas, bordado y cerrar el pedido.</p>
 
                 <a class="button button--filled" href=${this.whatsAppLink} target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">

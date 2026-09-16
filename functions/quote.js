@@ -11,14 +11,23 @@ export class InvalidOrder extends Error {}
 
 /* What the browser is allowed to see: no rates and no discount tiers */
 export function publicCatalog(data) {
-    const garments = Object.entries(data.garments ?? {})
-        .sort(([, a], [, b]) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    const byOrder = (a, b) => (a[1].sortOrder ?? 0) - (b[1].sortOrder ?? 0);
+
+    const lines = Object.entries(data.lines ?? {})
+        .sort(byOrder)
         .map(([id, { name }]) => ({ id, name }));
 
+    /* A garment whose line no longer exists would never be reachable from
+       the line picker, so it is left out rather than shown loose */
+    const garments = Object.entries(data.garments ?? {})
+        .filter(([, garment]) => data.lines?.[garment.line])
+        .sort(byOrder)
+        .map(([id, { name, line }]) => ({ id, name, line }));
+
     return {
+        lines,
         garments,
         sizes: data.sizes ?? [],
-        types: data.types ?? [],
         embroidery: data.embroidery ?? 0,
     };
 }

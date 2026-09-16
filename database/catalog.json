@@ -1,20 +1,35 @@
 {
+  "lines": {
+    "industrial": { "name": "Industrial y operativa", "sortOrder": 1 },
+    "health": { "name": "Salud, estética y alimentos", "sortOrder": 2 },
+    "office": { "name": "Administrativa y formal", "sortOrder": 3 },
+    "knit": { "name": "Tejido de punto y colegial", "sortOrder": 4 }
+  },
   "garments": {
-    "shirt": { "name": "Camisa", "sortOrder": 1, "rate": 38000 },
-    "blouse": { "name": "Blusa", "sortOrder": 2, "rate": 40000 },
-    "polo": { "name": "Camiseta polo", "sortOrder": 3, "rate": 32000 },
-    "trousers": { "name": "Pantalón", "sortOrder": 4, "rate": 52000 },
-    "skirt": { "name": "Falda", "sortOrder": 5, "rate": 45000 },
-    "sweatshirt": { "name": "Sudadera", "sortOrder": 6, "rate": 68000 },
-    "jacket": { "name": "Chaqueta", "sortOrder": 7, "rate": 85000 },
-    "vest": { "name": "Chaleco", "sortOrder": 8, "rate": 42000 },
-    "coat": { "name": "Bata", "sortOrder": 9, "rate": 58000 },
-    "tunic": { "name": "Filipina", "sortOrder": 10, "rate": 55000 },
-    "apron": { "name": "Delantal", "sortOrder": 11, "rate": 28000 },
-    "overalls": { "name": "Overol", "sortOrder": 12, "rate": 92000 }
+    "drill-trousers": { "name": "Pantalón clásico de dril", "line": "industrial", "sortOrder": 1, "rate": 58000 },
+    "cargo-trousers": { "name": "Pantalón tipo cargo", "line": "industrial", "sortOrder": 2, "rate": 66000 },
+    "work-shirt": { "name": "Camisa de trabajo", "line": "industrial", "sortOrder": 3, "rate": 52000 },
+    "coveralls": { "name": "Overol enterizo", "line": "industrial", "sortOrder": 4, "rate": 112000 },
+    "jacket-set": { "name": "Conjunto chaqueta y pantalón", "line": "industrial", "sortOrder": 5, "rate": 138000 },
+    "brigade-vest": { "name": "Chaleco brigadista", "line": "industrial", "sortOrder": 6, "rate": 64000 },
+
+    "v-neck-top": { "name": "Blusa médica cuello en V", "line": "health", "sortOrder": 7, "rate": 54000 },
+    "mandarin-top": { "name": "Blusa médica cuello nerú", "line": "health", "sortOrder": 8, "rate": 56000 },
+    "scrub-trousers": { "name": "Pantalón médico", "line": "health", "sortOrder": 9, "rate": 52000 },
+    "scrub-set": { "name": "Conjunto quirúrgico", "line": "health", "sortOrder": 10, "rate": 104000 },
+    "lab-coat": { "name": "Bata médica o de laboratorio", "line": "health", "sortOrder": 11, "rate": 78000 },
+    "waterproof-apron": { "name": "Delantal antifluido", "line": "health", "sortOrder": 12, "rate": 36000 },
+
+    "dress-shirt": { "name": "Camisa ejecutiva de botones", "line": "office", "sortOrder": 13, "rate": 62000 },
+    "dress-blouse": { "name": "Blusa formal femenina", "line": "office", "sortOrder": 14, "rate": 64000 },
+    "tailored-trousers": { "name": "Pantalón formal de sastre", "line": "office", "sortOrder": 15, "rate": 74000 },
+
+    "polo-shirt": { "name": "Camiseta tipo polo", "line": "knit", "sortOrder": 16, "rate": 38000 },
+    "crew-neck-tee": { "name": "Camiseta cuello redondo", "line": "knit", "sortOrder": 17, "rate": 28000 },
+    "sweatpants": { "name": "Pantalón de sudadera", "line": "knit", "sortOrder": 18, "rate": 48000 },
+    "track-jacket": { "name": "Chaqueta deportiva", "line": "knit", "sortOrder": 19, "rate": 86000 }
   },
   "sizes": ["XS", "S", "M", "L", "XL"],
-  "types": ["Escolar", "Empresarial", "Salud", "Otro"],
   "embroidery": 6000,
   "tiers": [
     { "from": 200, "discount": 0.18 },

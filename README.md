@@ -27,11 +27,13 @@ y el flujo falla a propósito antes de publicar.
 
 Dos pasos que se van revelando.
 
-1. **Prendas.** Catálogo de doce tarjetas, cada una con el dibujo de la prenda.
-   Se toca para escoger, y hay que escoger al menos una para continuar.
+1. **Prendas.** Primero se escogen las líneas de dotación (industrial, salud,
+   administrativa, punto). El catálogo muestra solo las prendas de las líneas
+   activas, en tarjetas con el dibujo de cada prenda. Siempre queda al menos
+   una línea encendida, y hay que escoger al menos una prenda para continuar.
 2. **Cantidades.** Tallas de XS a XL por prenda, bordado del logo opcional y
-   observaciones. Calcula un precio aproximado y ofrece seguir por WhatsApp o
-   por correo.
+   observaciones. Calcula un precio aproximado y ofrece volver a cotizar o
+   seguir por WhatsApp o por correo.
 
 Cualquier cambio en prendas, tallas o bordado borra el estimado: no puede
 quedar en pantalla un precio que ya no corresponde al formulario.
@@ -51,13 +53,16 @@ cada prenda tiene en la base.
 Dos Cloud Functions en `functions/`, que leen la Realtime Database
 (`amedida-b6831-default-rtdb`) bajo `/catalog`:
 
-- `GET /catalog` — prendas (`id`, `name`), tallas (`sizes`), tipos de dotación
-  (`types`) y precio del bordado (`embroidery`). No incluye tarifas (`rate`) ni
-  tramos de descuento (`tiers`).
+- `GET /catalog` — líneas (`lines`, con `id` y `name`), prendas (`id`, `name`
+  y la línea a la que pertenecen), tallas (`sizes`) y precio del bordado
+  (`embroidery`). No incluye tarifas (`rate`) ni tramos de descuento (`tiers`).
 - `POST /quote` — recibe
-  `{ "type": "Salud", "lines": [{ "garment": "shirt", "sizes": { "M": 10 }, "embroidery": true }] }`
+  `{ "lines": [{ "garment": "polo-shirt", "sizes": { "M": 10 }, "embroidery": true }] }`
   y devuelve `items`, `units`, `discount` y `total`. Responde 400 si el
   pedido trae prendas, tallas o cantidades que no existen.
+
+Ojo con el nombre: en el pedido, `lines` son los renglones del pedido. Las
+líneas de dotación son otra cosa y viven en `/catalog/lines`.
 
 Las reglas de la base (`database.rules.json`) cierran lectura y escritura:
 solo las funciones entran, con el Admin SDK. Las reglas del cálculo están en
@@ -70,7 +75,15 @@ subirlo:
 firebase database:set /catalog database/catalog.json
 ```
 
-Una prenda nueva necesita además su dibujo en `garment-icons.js`.
+Una prenda nueva necesita además su dibujo en `garment-icons.js`, con la misma
+clave, y pertenecer a una línea existente: si su `line` no está en
+`/catalog/lines`, la API no la entrega.
+
+El cotizador necesita que `GET /catalog` entregue `lines`. Si la API
+desplegada es anterior a las líneas de dotación, la página no intenta
+dibujar medio cotizador: muestra el aviso de que no pudo traer el catálogo,
+con un botón para reintentar, y deja el motivo en la consola. Subir el
+catálogo a la base no basta, hay que desplegar también las funciones.
 
 Publicar las funciones y las reglas (requiere el plan Blaze):
 
@@ -100,7 +113,8 @@ producción).
 - `src/format.js` — formato de precios.
 - `src/api.js` — cliente de la API.
 - `functions/` — la API del cotizador.
-- `database/catalog.json` — prendas, tarifas, tallas y descuentos que van a la base.
+- `database/catalog.json` — líneas, prendas, tarifas, tallas y descuentos que
+  van a la base.
 - `public/` — lo que se copia tal cual: CNAME y favicon.
 
 El texto y los enlaces se quedan en `index.html`, fuera de los componentes,
