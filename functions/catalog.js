@@ -10,7 +10,7 @@ const byOrder = (a, b) => (a[1].sortOrder ?? 0) - (b[1].sortOrder ?? 0);
 export function publicCatalog(data) {
     const lines = Object.entries(data.lines ?? {})
         .sort(byOrder)
-        .map(([id, { name }]) => ({ id, name }));
+        .map(([id, { name, shortName }]) => ({ id, name, shortName: shortName ?? name }));
 
     /* A garment whose line no longer exists would never be reachable from
        the line picker, and one without a rate can't be priced, so both are

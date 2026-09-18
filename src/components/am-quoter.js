@@ -22,8 +22,9 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * The quoter, in two steps that reveal themselves progressively.
  *
- * 1. Garments: a catalog of cards with a drawing of each garment.
- * 2. Quantities: sizes, embroidery and notes per garment, and the estimate.
+ * 1. Garments: a catalog of cards with a drawing of each garment. A chosen
+ *    card opens in place so its units can be split by size.
+ * 2. Details: embroidery and notes per garment, and the estimate.
  *
  * A floating bar appears at the bottom when the next thing to do has
  * scrolled off screen. That keeps the flow going without moving the page
@@ -38,7 +39,7 @@ export class AmQuoter extends LitElement {
         catalogFailed: { state: true },
         priceFailed: { state: true },
         step: { state: true },
-        lines: { state: true },
+        activeLine: { state: true },
         selection: { state: true },
         orders: { state: true },
         estimate: { state: true },
@@ -64,8 +65,8 @@ export class AmQuoter extends LitElement {
         this.catalogFailed = false;
         this.priceFailed = false;
         this.step = 1;
-        /* Ids of the product lines on show. At least one is always on */
-        this.lines = [];
+        /* The product line being browsed. None at first: the customer picks */
+        this.activeLine = '';
         this.selection = [];
         this.orders = {};
         this.estimate = null;
@@ -106,7 +107,6 @@ export class AmQuoter extends LitElement {
                 throw new Error('The catalog has no rates: the API is out of date');
             }
             this.catalog = catalog;
-            this.lines = catalog.lines.slice(0, 1).map((line) => line.id);
         } catch (error) {
             console.error(error);
             this.catalog = null;
@@ -119,9 +119,15 @@ export class AmQuoter extends LitElement {
         return this.catalog?.garments.find((garment) => garment.name === name)?.id ?? '';
     }
 
-    /* Garments of the lines currently on show */
+    /* The line being browsed, plus whatever was chosen in other lines, in
+       catalog order. Switching lines never hides a choice. */
     get visibleGarments() {
-        return this.catalog.garments.filter((garment) => this.lines.includes(garment.line));
+        return this.catalog.garments.filter((garment) =>
+            garment.line === this.activeLine || this.selection.includes(garment.name));
+    }
+
+    get currentLine() {
+        return this.catalog.lines.find((line) => line.id === this.activeLine) ?? null;
     }
 
     /* Lines the order actually covers, to name them in the message */
@@ -129,10 +135,8 @@ export class AmQuoter extends LitElement {
         const withGarments = this.catalog.lines.filter((line) =>
             this.catalog.garments.some((garment) =>
                 garment.line === line.id && this.selection.includes(garment.name)));
-        const shown = withGarments.length
-            ? withGarments
-            : this.catalog.lines.filter((line) => this.lines.includes(line.id));
-        return shown.map((line) => line.name);
+        if (withGarments.length) return withGarments.map((line) => line.name);
+        return this.currentLine ? [this.currentLine.name] : [];
     }
 
     orderFor(garment) {
@@ -153,20 +157,25 @@ export class AmQuoter extends LitElement {
 
     /* What the loader says it is measuring: units and garments with units */
     get measuringSummary() {
-        const filled = this.selection.filter((garment) => this.units(garment) > 0);
+        const filled = this.filledGarments;
         const units = filled.reduce((sum, garment) => sum + this.units(garment), 0);
         const garments = filled.length;
         return `${units} ${units === 1 ? 'unidad' : 'unidades'} en ${garments} ${garments === 1 ? 'prenda' : 'prendas'}`;
     }
 
-    get canCalculate() {
-        return this.selection.some((garment) => this.units(garment) > 0);
+    /* Chosen garments that already have units: the ones that get priced */
+    get filledGarments() {
+        return this.selection.filter((garment) => this.units(garment) > 0);
     }
 
-    /* The first selected garment still without units, once some other one
+    get canCalculate() {
+        return this.filledGarments.length > 0;
+    }
+
+    /* The first chosen garment still without units, once some other one
        has been filled in. That's what needs completing next. */
     get nextPending() {
-        if (this.step !== 2) return null;
+        if (this.step !== 1) return null;
         if (!this.canCalculate) return null;
         return this.selection.find((garment) => this.units(garment) === 0) ?? null;
     }
@@ -182,27 +191,24 @@ export class AmQuoter extends LitElement {
         this.priceFailed = false;
     }
 
-    /* At least one line always stays on. Garments of a line that is switched
-       off leave the selection with it, so nothing invisible is quoted. */
-    toggleLine(id) {
-        const next = this.lines.includes(id)
-            ? this.lines.filter((line) => line !== id)
-            : [...this.lines, id];
-        if (!next.length) return;
-
-        this.lines = next;
-        const visible = this.catalog.garments
-            .filter((garment) => next.includes(garment.line))
-            .map((garment) => garment.name);
-        this.selection = this.selection.filter((name) => visible.includes(name));
-        this.clearEstimate();
+    /* One line at a time. Changing it keeps what was already chosen, so the
+       selection and the estimate stay as they are. */
+    chooseLine(id) {
+        if (id === this.activeLine) return;
+        this.activeLine = id;
         this.updateComplete.then(() => this.scrollToElement('#garments'));
     }
 
+    /* Taking a garment off also forgets its sizes, embroidery and note */
     toggleGarment(garment) {
-        this.selection = this.selection.includes(garment)
-            ? this.selection.filter((g) => g !== garment)
-            : [...this.selection, garment];
+        if (this.selection.includes(garment)) {
+            this.selection = this.selection.filter((g) => g !== garment);
+            const orders = { ...this.orders };
+            delete orders[garment];
+            this.orders = orders;
+        } else {
+            this.selection = [...this.selection, garment];
+        }
         this.clearEstimate();
     }
 
@@ -241,7 +247,7 @@ export class AmQuoter extends LitElement {
     }
 
     async goToStep2() {
-        if (!this.selection.length) return;
+        if (!this.canCalculate) return;
         this.step = 2;
         await this.updateComplete;
         this.scrollToElement('#step-2');
@@ -257,7 +263,7 @@ export class AmQuoter extends LitElement {
             continue: ['#continue', 'continueInView'],
             calculate: ['#calculate', 'calculateInView'],
             next: [
-                this.nextPending ? `#line-${this.idOf(this.nextPending)}` : null,
+                this.nextPending ? `#garment-${this.idOf(this.nextPending)}` : null,
                 'nextInView',
             ],
         };
@@ -290,8 +296,8 @@ export class AmQuoter extends LitElement {
 
         if (next && !this.nextInView) {
             return {
-                text: `Siguiente: ${next}`,
-                action: () => this.scrollToElement(`#line-${this.idOf(next)}`),
+                text: `Cantidades de ${next}`,
+                action: () => this.scrollToElement(`#garment-${this.idOf(next)}`),
             };
         }
 
@@ -300,8 +306,8 @@ export class AmQuoter extends LitElement {
             return { text: 'Calcular precio aproximado', action: () => this.calculate() };
         }
 
-        if (this.step === 1 && this.selection.length && !this.continueInView) {
-            const count = this.selection.length;
+        if (this.step === 1 && this.canCalculate && !this.continueInView) {
+            const count = this.filledGarments.length;
             return {
                 text: count === 1 ? 'Continuar con 1 prenda' : `Continuar con ${count} prendas`,
                 action: () => this.goToStep2(),
@@ -315,8 +321,7 @@ export class AmQuoter extends LitElement {
 
     get order() {
         return {
-            lines: this.selection
-                .filter((garment) => this.units(garment) > 0)
+            lines: this.filledGarments
                 .map((garment) => {
                     const { sizes, embroidery } = this.orderFor(garment);
                     return {
@@ -420,78 +425,140 @@ export class AmQuoter extends LitElement {
 
     /* ---------- Step 1 ---------- */
 
-    get garmentsLabel() {
-        const count = this.lines.length;
-        return count === 1 ? 'Prendas de la línea' : `Prendas de las ${count} líneas`;
+    unitsText(garment) {
+        const quantity = this.units(garment);
+        return `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}`;
     }
 
-    garmentCard({ name, id }) {
-        const active = this.selection.includes(name);
+    lineButton(line) {
+        const active = line.id === this.activeLine;
+        const count = this.catalog.garments.filter((garment) =>
+            garment.line === line.id && this.selection.includes(garment.name)).length;
+
         return html`
             <button
                 type="button"
-                class=${classMap({ 'garment-card': true, 'garment-card--active': active })}
+                class=${classMap({ 'line-button': true, 'line-button--active': active })}
                 aria-pressed=${active}
-                @click=${() => this.toggleGarment(name)}
+                title=${line.name}
+                @click=${() => this.chooseLine(line.id)}
             >
-                <svg class="garment-card__drawing" width="60" height="60" viewBox="0 0 64 64"
-                     fill="none" stroke="currentColor" stroke-width="1.6"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    ${ICONS[id]}
-                </svg>
-                <span class="garment-card__name">${name}</span>
+                <span>${line.shortName ?? line.name}</span>
+                ${count
+                    ? html`<span class="line-button__count" aria-label="${count} escogidas">${count}</span>`
+                    : nothing}
             </button>
         `;
     }
 
+    sizeInputs(garment) {
+        const { sizes } = this.orderFor(garment);
+        const id = this.idOf(garment);
+
+        return html`
+            <div class="sizes">
+                ${this.catalog.sizes.map((size) => html`
+                    <div class="size">
+                        <label class="size__label" for="${id}-${size}">${size}</label>
+                        <input
+                            class=${classMap({ size__control: true, 'size__control--filled': Boolean(sizes[size]) })}
+                            id="${id}-${size}"
+                            type="number"
+                            inputmode="numeric"
+                            min="0"
+                            placeholder="0"
+                            autocomplete="off"
+                            .value=${sizes[size] ?? ''}
+                            @input=${(e) => this.setSize(garment, size, e.target.value)}
+                        >
+                    </div>
+                `)}
+            </div>
+        `;
+    }
+
+    /* Closed, a card is a drawing and a name. Chosen, it spans the row and
+       opens its sizes; tapping the head again takes it off. */
+    garmentCard({ name, id }) {
+        const active = this.selection.includes(name);
+        const quantity = this.units(name);
+
+        return html`
+            <div
+                class=${classMap({ 'garment-card': true, 'garment-card--active': active })}
+                id="garment-${id}"
+            >
+                <button
+                    type="button"
+                    class="garment-card__head"
+                    aria-pressed=${active}
+                    @click=${() => this.toggleGarment(name)}
+                >
+                    <svg class="garment-card__drawing" viewBox="0 0 64 64"
+                         fill="none" stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        ${ICONS[id]}
+                    </svg>
+                    <span class="garment-card__label">
+                        <span class="garment-card__name">${name}</span>
+                        ${active
+                            ? html`<span class="garment-card__total">${quantity ? this.unitsText(name) : 'sin unidades'}</span>`
+                            : nothing}
+                    </span>
+                </button>
+                ${active ? this.sizeInputs(name) : nothing}
+            </div>
+        `;
+    }
+
+    get pendingSummary() {
+        if (!this.activeLine) return 'Escoja una línea para ver las prendas.';
+        return this.selection.length
+            ? 'Reparta al menos una unidad por talla para continuar.'
+            : 'Escoja las prendas que va a cotizar.';
+    }
+
     garmentsStep() {
-        const hasSelection = this.selection.length > 0;
+        const canContinue = this.canCalculate;
 
         return html`
             ${this.stepLabel(1, 'Prendas')}
 
             <div class="block">
-                <h2 class="title">¿Qué líneas de dotación necesita?</h2>
-                <p class="lead">Puede escoger varias y le mostramos las prendas de todas ellas.</p>
+                <h2 class="title">¿Qué línea de dotación necesita?</h2>
+                <p class="lead">Toque una prenda y reparta las unidades por talla. El número junto a cada línea muestra lo que lleva escogido.</p>
             </div>
 
             <div class="lines">
-                ${this.catalog.lines.map((line) => {
-                    const active = this.lines.includes(line.id);
-                    return html`
-                        <button
-                            type="button"
-                            class=${classMap({ 'line-button': true, 'line-button--active': active })}
-                            aria-pressed=${active}
-                            @click=${() => this.toggleLine(line.id)}
-                        >${line.name}</button>
-                    `;
-                })}
+                ${this.catalog.lines.map((line) => this.lineButton(line))}
             </div>
 
-            <div class="picker" id="garments">
-                <div class="picker__head">
-                    <span class="label">${this.garmentsLabel}</span>
-                    <span class="stitch" aria-hidden="true"></span>
-                </div>
-                <div class="catalog">
-                    ${repeat(this.visibleGarments, (garment) => garment.id,
-                        (garment) => this.garmentCard(garment))}
-                </div>
-            </div>
+            ${this.currentLine
+                ? html`
+                    <div class="picker" id="garments">
+                        <div class="picker__head">
+                            <span class="label">${this.currentLine.name}</span>
+                            <span class="stitch" aria-hidden="true"></span>
+                        </div>
+                        <div class="catalog">
+                            ${repeat(this.visibleGarments, (garment) => garment.id,
+                                (garment) => this.garmentCard(garment))}
+                        </div>
+                    </div>`
+                : nothing}
 
             <div class="block">
                 <span class="stitch" aria-hidden="true"></span>
-                <p class="summary">
-                    ${hasSelection ? this.selection.join(' · ') : 'Escoja al menos una prenda para continuar.'}
-                </p>
+                ${canContinue
+                    ? nothing
+                    : html`<p class="summary summary--pending">${this.pendingSummary}</p>`}
                 ${this.step === 1
                     ? html`
                         <button
                             type="button"
                             id="continue"
-                            class=${classMap({ button: true, 'button--filled': hasSelection, 'button--inert': !hasSelection })}
-                            ?disabled=${!hasSelection}
+                            class=${classMap({ button: true, 'button--filled': canContinue, 'button--inert': !canContinue })}
+                            ?disabled=${!canContinue}
                             @click=${this.goToStep2}
                         >
                             <span>Continuar</span>
@@ -513,37 +580,17 @@ export class AmQuoter extends LitElement {
 
     /* ---------- Step 2 ---------- */
 
-    lineCard(garment) {
+    detailsCard(garment) {
         const { embroidery, note, sizes } = this.orderFor(garment);
-        const quantity = this.units(garment);
 
         return html`
-            <article class="garment" id="line-${this.idOf(garment)}">
+            <article class="garment">
                 <header class="garment__header">
                     <h3 class="garment__name">${garment}</h3>
-                    <span class="garment__total">
-                        ${quantity ? `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}` : 'sin unidades'}
-                    </span>
+                    <span class="garment__total">${this.unitsText(garment)}</span>
                 </header>
 
-                <div class="sizes">
-                    ${this.catalog.sizes.map((size) => html`
-                        <div class="size">
-                            <label class="size__label" for="${this.idOf(garment)}-${size}">${size}</label>
-                            <input
-                                class=${classMap({ size__control: true, 'size__control--filled': Boolean(sizes[size]) })}
-                                id="${this.idOf(garment)}-${size}"
-                                type="number"
-                                inputmode="numeric"
-                                min="0"
-                                placeholder="0"
-                                autocomplete="off"
-                                .value=${sizes[size] ?? ''}
-                                @input=${(e) => this.setSize(garment, size, e.target.value)}
-                            >
-                        </div>
-                    `)}
-                </div>
+                <p class="garment__sizes">${this.describeSizes(sizes)}</p>
 
                 <div class="garment__extra">
                     <button
@@ -619,17 +666,17 @@ export class AmQuoter extends LitElement {
         `;
     }
 
-    quantitiesStep() {
+    detailsStep() {
         return html`
-            ${this.stepLabel(2, 'Cantidades', 'step-2')}
+            ${this.stepLabel(2, 'Detalles', 'step-2')}
 
             <div class="block">
-                <h2 class="title">Cantidades y tallas</h2>
-                <p class="lead">Reparta las unidades por talla. Deje en blanco las tallas que no necesita.</p>
+                <h2 class="title">Detalles de cada prenda</h2>
+                <p class="lead">Indique si lleva bordado del logo y cualquier detalle de tela o color.</p>
             </div>
 
             <div class="garments">
-                ${repeat(this.selection, (g) => g, (garment) => this.lineCard(garment))}
+                ${repeat(this.filledGarments, (g) => g, (garment) => this.detailsCard(garment))}
             </div>
 
             <div class="block">
@@ -740,7 +787,7 @@ export class AmQuoter extends LitElement {
 
         return html`
             ${this.garmentsStep()}
-            ${this.step === 2 ? this.quantitiesStep() : nothing}
+            ${this.step === 2 ? this.detailsStep() : nothing}
             ${this.floatingBar()}
         `;
     }

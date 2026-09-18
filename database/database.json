@@ -8,10 +8,10 @@
       { "discount": 0.08, "from": 50 }
     ],
     "lines": {
-      "industrial": { "name": "Industrial y operativa", "sortOrder": 1 },
-      "health": { "name": "Salud, estética y alimentos", "sortOrder": 2 },
-      "office": { "name": "Administrativa y formal", "sortOrder": 3 },
-      "knit": { "name": "Tejido de punto y colegial", "sortOrder": 4 }
+      "industrial": { "name": "Industrial y operativa", "shortName": "Industrial", "sortOrder": 1 },
+      "health": { "name": "Salud, estética y alimentos", "shortName": "Salud", "sortOrder": 2 },
+      "office": { "name": "Administrativa y formal", "shortName": "Administrativa", "sortOrder": 3 },
+      "knit": { "name": "Tejido de punto y colegial", "shortName": "Colegial", "sortOrder": 4 }
     },
     "garments": {
       "drill-trousers": { "line": "industrial", "name": "Pantalón clásico de dril", "rate": 71000, "sortOrder": 1 },

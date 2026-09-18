@@ -5,7 +5,7 @@ import { quote, InvalidOrder } from './quote.js';
 /* A fixed catalog in the shape GET /catalog returns, so these tests don't
    move every time the rates are recalculated */
 const catalog = {
-    lines: [{ id: 'knit', name: 'Tejido de punto y colegial' }],
+    lines: [{ id: 'knit', name: 'Tejido de punto y colegial', shortName: 'Colegial' }],
     garments: [
         { id: 'polo-shirt', name: 'Camiseta tipo polo', line: 'knit', rate: 38000 },
         { id: 'crew-neck-tee', name: 'Camiseta cuello redondo', line: 'knit', rate: 28000 },
