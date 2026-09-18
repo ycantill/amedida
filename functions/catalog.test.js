@@ -21,6 +21,7 @@ test('the catalog carries the lines and every garment belongs to one', () => {
     const catalog = publicCatalog(data);
     assert.deepEqual(catalog.lines.map((l) => l.id), ['industrial', 'health', 'office', 'knit']);
     assert.equal(catalog.lines[0].name, 'Industrial y operativa');
+    assert.equal(catalog.lines[0].shortName, 'Industrial');
 
     const ids = catalog.lines.map((l) => l.id);
     catalog.garments.forEach((garment) => assert.ok(ids.includes(garment.line), garment.id));

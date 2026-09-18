@@ -281,21 +281,25 @@ am-quoter {
     text-wrap: pretty;
 }
 
+/* What is still missing before continuing, in the quieter tone */
+.summary--pending { color: var(--tape-descriptor); }
+
 /* ==========================================================================
    5. PRODUCT LINES
-   Full-width buttons: each one shows or hides its garments
+   A row of short buttons; the number counts what is chosen in each line
    ========================================================================== */
 .lines {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .line-button {
     display: flex;
     align-items: center;
-    min-height: 52px;
-    padding: 0 18px;
+    gap: 9px;
+    min-height: 46px;
+    padding: 0 16px;
     border: 1px solid var(--tape-rule);
     background: none;
     cursor: pointer;
@@ -303,8 +307,8 @@ am-quoter {
     font-weight: 500;
     font-size: 15px;
     letter-spacing: 0.01em;
+    white-space: nowrap;
     color: var(--tape-descriptor);
-    text-align: left;
     transition: var(--transition);
 }
 
@@ -319,9 +323,29 @@ am-quoter {
     color: var(--tape-text-strong);
 }
 
+.line-button__count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: var(--tape-rule);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--tape-text);
+}
+
+.line-button--active .line-button__count {
+    background: var(--tape-accent);
+    color: var(--tape-field);
+}
+
 /* ==========================================================================
    6. GARMENT CATALOG
-   Two-column cards with a drawing of each garment
+   Two-column cards with a drawing of each garment. A chosen card takes
+   the full row and opens its sizes right there.
    ========================================================================== */
 .picker {
     display: flex;
@@ -340,21 +364,14 @@ am-quoter {
 .catalog {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 12px;
 }
 
 .garment-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    min-height: 142px;
-    padding: 18px 10px;
     border: 1px solid var(--tape-rule);
-    background: none;
-    cursor: pointer;
-    text-align: center;
     color: var(--tape-descriptor);
     transition: var(--transition);
 }
@@ -364,15 +381,63 @@ am-quoter {
     color: var(--tape-text);
 }
 
-.garment-card--active {
+.garment-card--active,
+.garment-card--active:hover {
+    grid-column: 1 / -1;
     background: rgba(168, 130, 58, 0.16);
     border-color: var(--tape-accent);
     color: var(--tape-text-strong);
 }
 
+/* The head is the toggle: the whole card when closed, the top row when open */
+.garment-card__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 142px;
+    padding: 18px 10px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: inherit;
+    text-align: center;
+}
+
+.garment-card--active .garment-card__head {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+    min-height: 64px;
+    padding: 14px 16px;
+    text-align: left;
+}
+
 /* The drawing takes the card's color */
 .garment-card__drawing {
     flex: none;
+    width: 78px;
+    height: 78px;
+}
+
+.garment-card--active .garment-card__drawing {
+    width: 46px;
+    height: 46px;
+}
+
+.garment-card__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.garment-card--active .garment-card__label {
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
 }
 
 .garment-card__name {
@@ -383,6 +448,15 @@ am-quoter {
     letter-spacing: 0.01em;
     text-wrap: pretty;
 }
+
+.garment-card__total {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--tape-accent);
+}
+
+.garment-card .sizes { padding: 0 16px 16px; }
 
 /* ==========================================================================
    7. CHIP: the embroidery toggle
@@ -466,52 +540,16 @@ am-quoter {
 }
 
 /* ==========================================================================
-   9. GARMENT CARD AND SIZES
+   9. SIZES AND GARMENT DETAILS
    ========================================================================== */
-.garments {
-    display: flex;
-    flex-direction: column;
-    gap: 26px;
-}
-
-.garment {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    border: 1px solid var(--tape-rule);
-    padding: 20px;
-}
-
-.garment__header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.garment__name {
-    font-family: var(--font-brand);
-    font-weight: 700;
-    font-size: 20px;
-    color: var(--tape-text);
-}
-
-.garment__total {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: var(--tape-accent);
-    white-space: nowrap;
-}
-
 .sizes {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
 }
 
 .size {
-    width: 74px;
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -532,7 +570,7 @@ am-quoter {
     padding: 0;
     border: 1px solid var(--tape-rule);
     border-radius: 0;
-    background: none;
+    background: rgba(30, 42, 68, 0.55);
     font-family: var(--font-text);
     font-size: 16px;
     color: var(--tape-text-strong);
@@ -544,8 +582,53 @@ am-quoter {
 .size__control:focus { outline: none; border-color: var(--tape-accent); }
 
 .size__control--filled {
-    background: rgba(168, 130, 58, 0.16);
+    background: rgba(168, 130, 58, 0.24);
     border-color: var(--tape-accent);
+}
+
+.garments {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.garment {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid var(--tape-rule);
+    padding: 20px;
+}
+
+.garment__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.garment__name {
+    font-family: var(--font-brand);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--tape-text);
+    text-wrap: pretty;
+}
+
+.garment__total {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--tape-accent);
+    white-space: nowrap;
+}
+
+/* The units per size, already given in step 1 */
+.garment__sizes {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--tape-descriptor);
 }
 
 .garment__extra {
@@ -725,7 +808,6 @@ button:focus-visible {
    13. NARROW SCREENS
    ========================================================================== */
 @media (max-width: 400px) {
-    .size { width: calc(33.333% - 7px); }
     .actions { flex-direction: column; }
     .contact__item { font-size: 15px; }
     .contact__item--email { font-size: 14px; }

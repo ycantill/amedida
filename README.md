@@ -27,11 +27,15 @@ y el flujo falla a propósito antes de publicar.
 
 Dos pasos que se van revelando.
 
-1. **Prendas.** Primero se escogen las líneas de dotación (industrial, salud,
-   administrativa, punto). El catálogo muestra solo las prendas de las líneas
-   activas, en tarjetas con el dibujo de cada prenda. Siempre queda al menos
-   una línea encendida, y hay que escoger al menos una prenda para continuar.
-2. **Cantidades.** Tallas de XS a XL por prenda, bordado del logo opcional y
+1. **Prendas.** Se escoge una línea de dotación a la vez (Industrial, Salud,
+   Administrativa, Colegial); al entrar no hay ninguna escogida, y cada botón
+   lleva un número con las prendas que ya tiene escogidas. El catálogo muestra
+   las prendas de esa línea en tarjetas con su dibujo. Al tocar una, la
+   tarjeta ocupa toda la fila y abre ahí mismo las tallas de XS a XL para
+   repartir las unidades; tocarla otra vez la quita. Cambiar de línea no
+   borra nada: las prendas escogidas de otras líneas siguen a la vista. Hay
+   que tener al menos una prenda con unidades para continuar.
+2. **Detalles.** Por cada prenda con unidades, bordado del logo opcional y
    observaciones. Calcula un precio aproximado y ofrece volver a cotizar o
    seguir por WhatsApp o por correo.
 
@@ -39,10 +43,10 @@ Cualquier cambio en prendas, tallas o bordado borra el estimado: no puede
 quedar en pantalla un precio que ya no corresponde al formulario.
 
 Una barra flotante aparece abajo cuando lo que toca hacer a continuación quedó
-fuera de la pantalla: continuar al paso 2, ir a la siguiente prenda sin llenar,
-o calcular el precio. Se sabe con un observador de intersección sobre cada uno
-de esos tres elementos, así la página no se mueve bajo los dedos de quien está
-tocando tarjetas.
+fuera de la pantalla: continuar al paso 2, ir a las tallas de la siguiente
+prenda escogida sin unidades, o calcular el precio. Se sabe con un observador
+de intersección sobre cada uno de esos tres elementos, así la página no se
+mueve bajo los dedos de quien está tocando tarjetas.
 
 El catálogo, con las tarifas, viene de la API (ver abajo) y el precio se
 calcula en el navegador, en `src/quote.js`. Los dibujos de las prendas están
@@ -54,8 +58,8 @@ tiene en la base.
 Dos Cloud Functions en `functions/`, que leen la Realtime Database
 (`amedida-b6831-default-rtdb`):
 
-- `GET /catalog` — lee `/catalog` y entrega líneas (`lines`, con `id` y
-  `name`), prendas (`id`, `name`, `line` y `rate`), tallas (`sizes`), tramos
+- `GET /catalog` — lee `/catalog` y entrega líneas (`lines`, con `id`,
+  `name` y `shortName`, el nombre corto de los botones), prendas (`id`, `name`, `line` y `rate`), tallas (`sizes`), tramos
   de descuento (`tiers`) y precio del bordado (`embroidery`). Con eso el
   cotizador calcula el pedido sin volver a llamar a la API. Queda en caché
   5 minutos.
